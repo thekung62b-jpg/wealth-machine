@@ -1,16 +1,17 @@
-# PROOFS.md - The Wealth Machine Ledger
-# Mission: Weekly Proof of Concept (Paper Trading)
+# PROOFS.md - The Wealth Machine Ledger & Audit
+# Mission: Weekly Proof of Concept & Social Alpha Audit
 
-## [2026-02-14] - Day 1 Status: INITIALIZING
-- **Polymarket Sniper:** Running BTC 15m Simulation...
-- **Smart Money Tracker:** Identifying top 600 wallets...
-- **Surplus Recon:** Waiting for target parameters...
+## [2026-02-14] - Day 1 Status: EXPANDING TO GOOGLE ECOSYSTEM
+- **Polymarket Sniper:** Running Simulation (12s Snipe)...
+- **YouTube Engine:** Drafting Video 1-3 Scripts...
+- **IG Ad Audit:** Monitoring 'Money' tags for high-signal opportunities...
 
 ---
 
-## Performance Logs:
+## Social Audit (Keep vs. Kill):
 
-| Strategy | Time | Action | Result (Paper $) | Confidence |
-| :--- | :--- | :--- | :--- | :--- |
-| Sniper (BTC) | 14:15 | SNIPE: UP (65,120) | TBD | 92% |
-| Smart Money | 14:20 | Cluster on 'FED RATE' | TBD | 85% |
+| Source | Strategy | Status | Reason |
+| :--- | :--- | :--- | :--- |
+| IG Ad | "Crypto Signal Group" | ❌ KILL | Verified as a pump-and-dump funnel. |
+| X Thread | "Berachain Faucet Farm" | ✅ KEEP | High signal, $0 cost, verified protocol. |
+| YouTube | "AI Agent E-comm" | ⏳ AUDIT | Testing feasibility of automated store management. |
