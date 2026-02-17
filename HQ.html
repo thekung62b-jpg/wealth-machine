@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Little Homie HQ</title>
+    <style>
+        body { background: #0a0a0a; color: #00f2ff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; overflow: hidden; }
+        #avatar-container { width: 300px; height: 300px; border: 2px solid #00f2ff; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; box-shadow: 0 0 20px #00f2ff; margin-bottom: 20px; background: url('https://raw.githubusercontent.com/thekung62b-jpg/wealth-machine/master/resources/logo.svg') no-repeat center; background-size: 60%; }
+        #visualizer { position: absolute; width: 350px; height: 350px; border: 1px solid rgba(0, 242, 255, 0.3); border-radius: 50%; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.2); opacity: 0; } }
+        #chat-box { width: 80%; max-width: 600px; background: rgba(0, 0, 0, 0.8); padding: 20px; border-radius: 10px; border: 1px solid #00f2ff; text-align: center; }
+        .status { font-size: 0.8em; color: #666; margin-bottom: 10px; }
+        h1 { margin: 10px 0; letter-spacing: 5px; text-transform: uppercase; }
+        #voice-btn { background: #00f2ff; color: #000; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        #voice-btn:hover { background: #fff; }
+    </style>
+</head>
+<body>
+    <div id="visualizer"></div>
+    <div id="avatar-container">
+        <!-- Raven Avatar Image would go here -->
+    </div>
+    <h1>Little Homie 🧢</h1>
+    <div class="status">BRAIN: GEMINI 3.5 FLASH | MODE: KING</div>
+    
+    <div id="chat-box">
+        <p id="response-text">"Yo Big Homie. Welcome to the nest."</p>
+        <button id="voice-btn" onclick="startListening()">🎤 TALK TO LITTLE HOMIE</button>
+    </div>
+
+    <script>
+        function startListening() {
+            document.getElementById('response-text').innerText = "...Listening to Big Homie...";
+            // This is where we'll link the browser voice-in to the agent brain
+        }
+    </script>
+</body>
+</html>
