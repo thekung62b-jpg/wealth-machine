@@ -1,1 +1,1 @@
-{"id": "open_tradingview_final", "cmd": "start chrome https://www.tradingview.com/chart/"}
+{"id": "start_bravo_practice", "cmd": "echo 'Starting J Bravo Practice Mode...' && python bravo_logger.py"}

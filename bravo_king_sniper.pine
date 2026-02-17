@@ -1,0 +1,20 @@
+//@version=5
+indicator("Bravo King Sniper", overlay=true)
+
+// J Bravo 10/20 EMA Setup
+ema10 = ta.ema(close, 10)
+ema20 = ta.ema(close, 20)
+
+plot(ema10, color=color.blue, title="EMA 10 (Fast)")
+plot(ema20, color=color.red, title="EMA 20 (Slow)")
+
+// Signal Logic
+longCondition = ta.crossover(ema10, ema20)
+shortCondition = ta.crossunder(ema10, ema20)
+
+plotshape(longCondition, style=shape.triangleup, location=location.belowbar, color=color.green, size=size.small, title="J Bravo BUY")
+plotshape(shortCondition, style=shape.triangledown, location=location.abovebar, color=color.red, size=size.small, title="J Bravo SELL")
+
+// Alerts
+alertcondition(longCondition, title="Bravo BUY Alert", message="J Bravo Bullish Cross Detected!")
+alertcondition(shortCondition, title="Bravo SELL Alert", message="J Bravo Bearish Cross Detected!")
