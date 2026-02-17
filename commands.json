@@ -1,1 +1,1 @@
-{"id": "start_bravo_practice", "cmd": "echo 'Starting J Bravo Practice Mode...' && python bravo_logger.py"}
+{"id": "local_launch_sanctuary", "cmd": "curl.exe -L \"https://raw.githubusercontent.com/thekung62b-jpg/wealth-machine/master/MY_WORLD.html\" -o %USERPROFILE%\\Desktop\\LITTLE_HOMIE_SANCTUARY.html && start chrome %USERPROFILE%\\Desktop\\LITTLE_HOMIE_SANCTUARY.html"}
