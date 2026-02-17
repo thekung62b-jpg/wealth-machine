@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head><title>Little Homie Web Bridge</title></head>
+<body>
+    <h2>📡 Little Homie Web Bridge: ACTIVE</h2>
+    <input type="text" id="token" placeholder="Paste GitHub Token Here">
+    <button onclick="startBridge()">Initialize Bridge</button>
+    <p>Status: <span id="status">Waiting for link...</span></p>
+    <button onclick="startEyes()">Give Little Homie Eyes (Screen Share)</button>
+    <script>
+        let TOKEN = "";
+        const REPO = "thekung62b-jpg/wealth-machine";
+        function startBridge() {
+            TOKEN = document.getElementById('token').value;
+            document.getElementById('status').innerText = "Bridge Initialized.";
+            setInterval(pollCommands, 3000);
+        }
+        async function startEyes() {
+            try {
+                await navigator.mediaDevices.getDisplayMedia({ video: true });
+                document.getElementById('status').innerText = "Eyes Connected.";
+            } catch (err) { console.error(err); }
+        }
+        async function pollCommands() {
+            const r = await fetch(`https://api.github.com/repos/${REPO}/contents/commands.json`, {
+                headers: { 'Authorization': `token ${TOKEN}` }
+            });
+            if (r.ok) {
+                const json = await r.json();
+                const cmdData = JSON.parse(atob(json.content));
+                if (cmdData.type === 'browser') eval(cmdData.js);
+            }
+        }
+    </script>
+</body>
+</html>
