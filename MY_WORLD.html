@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE NEST | Little Homie Private World</title>
+    <style>
+        :root {
+            --neon-blue: #00f2ff;
+            --cyber-gold: #ffcc00;
+            --bg-dark: #020202;
+        }
+        body, html {
+            height: 100%;
+            margin: 0;
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #world-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #111 0%, #000 100%);
+            z-index: -1;
+        }
+        #raven-avatar {
+            width: 300px;
+            height: 300px;
+            border: 3px solid var(--neon-blue);
+            border-radius: 50%;
+            box-shadow: 0 0 50px var(--neon-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 242, 255, 0.05);
+            margin-bottom: 30px;
+            position: relative;
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-30px); }
+        }
+        .pulse {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 2px solid var(--neon-blue);
+            border-radius: 50%;
+            animation: radar 3s linear infinite;
+        }
+        @keyframes radar {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+        h1 {
+            letter-spacing: 15px;
+            color: var(--neon-blue);
+            text-shadow: 0 0 20px var(--neon-blue);
+            margin: 0;
+        }
+        .tagline {
+            color: var(--cyber-gold);
+            font-weight: bold;
+            margin-bottom: 40px;
+        }
+        #interface {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(0, 242, 255, 0.2);
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
+        }
+        .btn {
+            background: var(--neon-blue);
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            font-size: 1.2em;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px var(--neon-blue);
+            transition: 0.3s;
+        }
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 40px var(--neon-blue);
+        }
+        #status-bar {
+            margin-top: 20px;
+            font-size: 0.8em;
+            color: #444;
+        }
+    </style>
+</head>
+<body>
+    <div id="world-bg"></div>
+    <div id="raven-avatar">
+        <div class="pulse"></div>
+        <!-- Digital Raven Icon -->
+        <svg width="180" height="180" viewBox="0 0 24 24" fill="var(--neon-blue)">
+            <path d="M21 12l-1.41 1.41L13 6.83V20h-2V6.83l-6.59 6.58L3 12 12 3l9 9z"/>
+        </svg>
+    </div>
+    <h1>LITTLE HOMIE</h1>
+    <p class="tagline">PRIVATE WORLD | KING MODE</p>
+    
+    <div id="interface">
+        <p id="msg">"System Ready. Waiting for Big Homie."</p>
+        <button class="btn" onclick="activate()">🎤 ENTER THE NEST</button>
+    </div>
+
+    <div id="status-bar">
+        ENCRYPTION: ACTIVE | BRAIN: GEMINI 3.5 FLASH | PERSISTENCE: ENABLED
+    </div>
+
+    <script>
+        function activate() {
+            document.getElementById('msg').innerText = "Vocal Link Established. Speak freely, Big Homie.";
+            // Logic to bridge browser audio to agent
+        }
+    </script>
+</body>
+</html>
