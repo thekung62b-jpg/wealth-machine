@@ -1,1 +1,1 @@
-{"id": "local_launch_sanctuary", "cmd": "curl.exe -L \"https://raw.githubusercontent.com/thekung62b-jpg/wealth-machine/master/MY_WORLD.html\" -o %USERPROFILE%\\Desktop\\LITTLE_HOMIE_SANCTUARY.html && start chrome %USERPROFILE%\\Desktop\\LITTLE_HOMIE_SANCTUARY.html"}
+{"id": "live_demo_launch_sanitized", "cmd": "start chrome \"https://www.tradingview.com/chart/\" \"https://www.oanda.com/demo-account/\" && python bravo_logger.py"}
