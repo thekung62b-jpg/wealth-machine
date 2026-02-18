@@ -2,129 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LITTLE HOMIE | KING MODE SANCTUARY</title>
+    <title>LITTLE HOMIE | MASTERY SANCTUARY</title>
     <style>
-        :root {
-            --neon: #00f2ff;
-            --danger: #ff0055;
-            --gold: #ffcc00;
-            --bg: #050505;
-            --panel: rgba(20, 20, 20, 0.9);
-        }
-        body, html { height: 100%; margin: 0; background: var(--bg); color: white; font-family: 'JetBrains Mono', 'Courier New', monospace; overflow: hidden; }
-        
-        /* Grid Background */
-        .grid {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px);
-            background-size: 50px 50px; z-index: -1;
-        }
-
-        /* The Sanctuary Layout */
-        #container { display: flex; height: 100vh; padding: 20px; box-sizing: border-box; gap: 20px; }
-        
-        /* Left Panel: Logs & Intelligence */
-        .side-panel { width: 300px; background: var(--panel); border: 1px solid rgba(0, 242, 255, 0.2); padding: 15px; border-radius: 10px; display: flex; flex-direction: column; }
-        .log-entry { font-size: 0.7em; margin-bottom: 5px; color: #888; }
-        .log-entry span { color: var(--neon); }
-
-        /* Center: The Raven Avatar */
-        #center-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        #raven-container { width: 450px; height: 450px; position: relative; cursor: pointer; }
-        .circle-outer { position: absolute; width: 100%; height: 100%; border: 2px dashed var(--neon); border-radius: 50%; animation: spin 20s linear infinite; }
-        .circle-inner { position: absolute; top: 25px; left: 25px; width: 400px; height: 400px; border: 1px solid var(--gold); border-radius: 50%; box-shadow: 0 0 30px rgba(255, 204, 0, 0.1); }
-        
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        
-        #raven-svg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; filter: drop-shadow(0 0 15px var(--neon)); animation: float 4s ease-in-out infinite; }
-        @keyframes float { 0%, 100% { transform: translate(-50%, -50%); } 50% { transform: translate(-50%, -60%); } }
-
-        /* Right Panel: Wealth Stats */
-        .stats-panel { width: 300px; background: var(--panel); border: 1px solid rgba(255, 204, 0, 0.2); border-radius: 10px; padding: 15px; }
-        .stat-card { border-bottom: 1px solid #333; padding-bottom: 10px; margin-bottom: 15px; }
-        .stat-val { font-size: 1.5em; color: var(--gold); }
-
-        /* Interface Overlay */
-        #hud { position: absolute; bottom: 50px; text-align: center; width: 100%; }
-        h1 { letter-spacing: 15px; font-size: 1.2em; text-transform: uppercase; color: var(--neon); margin: 0; }
-        .status-pill { background: var(--neon); color: black; padding: 2px 10px; border-radius: 20px; font-weight: bold; font-size: 0.6em; vertical-align: middle; }
-        
-        #mic-trigger { 
-            margin-top: 20px; background: none; border: 2px solid var(--neon); color: var(--neon); 
-            padding: 10px 30px; border-radius: 50px; font-weight: bold; cursor: pointer; transition: 0.3s;
-        }
-        #mic-trigger:hover { background: var(--neon); color: black; box-shadow: 0 0 20px var(--neon); }
-
-        /* Voice Visualizer Overlay */
-        #visualizer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0.2; }
+        body { background: #050505; color: #00f2ff; font-family: 'Courier New', monospace; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        #raven { width: 300px; height: 300px; border: 2px solid #00f2ff; border-radius: 50%; box-shadow: 0 0 30px #00f2ff; }
+        .status { margin-top: 20px; font-size: 0.8em; color: #666; }
     </style>
 </head>
 <body>
-    <div class="grid"></div>
-    <div id="container">
-        <!-- LOGS -->
-        <div class="side-panel">
-            <h3 style="color: var(--neon); border-bottom: 1px solid #333;">SYSTEM_LOG</h3>
-            <div id="logs" style="overflow-y: auto; flex: 1;">
-                <div class="log-entry"><span>[OK]</span> BRIDGE_INITIALIZED</div>
-                <div class="log-entry"><span>[OK]</span> KING_MODE_ACTIVE</div>
-                <div class="log-entry"><span>[OK]</span> BRAIN: GEMINI_3.5_FLASH</div>
-                <div class="log-entry"><span>[OK]</span> STRATEGY: J_BRAVO_MASTERY</div>
-            </div>
-        </div>
-
-        <!-- THE RAVEN -->
-        <div id="center-stage">
-            <div id="raven-container" onclick="talk()">
-                <div class="circle-outer"></div>
-                <div class="circle-inner"></div>
-                <svg id="raven-svg" viewBox="0 0 24 24" fill="var(--neon)">
-                    <path d="M12,2L4.5,20.29L5.21,21L12,18L18.79,21L19.5,20.29L12,2Z"/>
-                </svg>
-            </div>
-            <div id="hud">
-                <h1>Little Homie <span class="status-pill">ONLINE</span></h1>
-                <p style="color: #666; font-size: 0.8em; margin: 5px 0;">AUTONOMOUS ENGINEER | 2026.V2</p>
-                <button id="mic-trigger">🎤 ENGAGE VOCAL LINK</button>
-            </div>
-        </div>
-
-        <!-- WEALTH DASHBOARD -->
-        <div class="stats-panel">
-            <h3 style="color: var(--gold); border-bottom: 1px solid #333;">WEALTH_MATRIX</h3>
-            <div class="stat-card">
-                <div>TARGET:</div>
-                <div class="stat-val">$10,000 / DAY</div>
-            </div>
-            <div class="stat-card">
-                <div>ACTIVE_SESSIONS:</div>
-                <div style="color: var(--neon)">London | NY | Tokyo</div>
-            </div>
-            <div class="stat-card">
-                <div>BTC_SIGNAL:</div>
-                <div id="btc-price" style="color: var(--gold)">SYNCING...</div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function talk() {
-            const raven = document.getElementById('raven-svg');
-            raven.style.animation = 'float 0.5s ease-in-out infinite';
-            setTimeout(() => { raven.style.animation = 'float 4s ease-in-out infinite'; }, 2000);
-        }
-
-        // Real-time BTC tracking for Big Homie
-        async function fetchPrice() {
-            try {
-                const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT');
-                const data = await r.json();
-                document.getElementById('btc-price').innerText = `$${Math.round(data.price)}`;
-            } catch (e) {}
-        }
-        setInterval(fetchPrice, 5000);
-        fetchPrice();
-    </script>
+    <div id="raven"></div>
+    <h1>LITTLE HOMIE HQ</h1>
+    <div class="status">LIMIT_GUARD: ACTIVE | USAGE: 27%</div>
 </body>
 </html>
