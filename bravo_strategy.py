@@ -1,5 +1,6 @@
-# J Bravo Strategy Module - v1.0
+# J Bravo Strategy Module - v1.1
 # Mission: Trend following using EMA 10/20 and Macro Signals
+# Portfolio: BTC, SOL, LINK, AVAX, DOGE, PEPE (ETH BYPASSED)
 
 class BravoStrategy:
     def __init__(self, tickers):
@@ -8,7 +9,7 @@ class BravoStrategy:
         self.ema_slow = 20
 
     def calculate_ema(self, data, period):
-        # Logic to calculate EMA from price data
+        if not data or len(data) < period: return 0
         return sum(data[-period:]) / period # Simplified
 
     def check_trend(self, ticker, price_data):
@@ -22,13 +23,15 @@ class BravoStrategy:
         else:
             return "⚖️ SIDEWAYS (No Trade)"
 
-    def check_macro_vix(self, vix_value):
-        if vix_value > 30:
-            return "🚨 EXTREME FEAR (Look for Bottom)"
-        return "Normal Market Conditions"
-
 if __name__ == "__main__":
-    bravo = BravoStrategy(["BTC", "ETH", "SOL"])
-    # Simulation
-    result = bravo.check_trend("BTC", [64000, 64500, 65000, 65500, 66000])
-    print(f"J Bravo Signal for BTC: {result}")
+    # ETH is excluded per Big Homie's directive
+    tickers = ["BTC", "SOL", "LINK", "AVAX", "DOGE", "PEPE"]
+    bravo = BravoStrategy(tickers)
+    
+    print("📋 CURRENT MARKET AUDIT (ALTCOIN FLEET):")
+    # BTC Check (Simulation)
+    print(f"BTC: {bravo.check_trend('BTC', [64000, 64500, 65000, 65500, 66000])}")
+    # SOL Check (Simulation)
+    print(f"SOL: {bravo.check_trend('SOL', [140, 142, 145, 148, 150])}")
+    # DOGE Check (Simulation)
+    print(f"DOGE: {bravo.check_trend('DOGE', [0.15, 0.14, 0.13, 0.12, 0.11])}")
