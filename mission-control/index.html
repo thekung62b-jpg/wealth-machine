@@ -3,86 +3,250 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Raven World</title>
+  <title>Raven Gemini-Style Mission Control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root{--bg:#070b14;--card:#0e1526cc;--line:#2c3f66;--txt:#e7efff;--muted:#9fb2d9}
-    *{box-sizing:border-box} html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:radial-gradient(circle at 20% 0%,#16264a,#070b14 55%);color:var(--txt)}
-    .app{display:grid;grid-template-columns:300px 1fr 280px;gap:10px;height:100%;padding:10px}
-    .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;backdrop-filter:blur(8px)}
-    .left,.right{padding:10px;overflow:auto}
-    .mid{display:grid;grid-template-rows:auto 1fr auto auto;gap:10px;min-width:0}
-    .top{padding:10px 12px;display:flex;justify-content:space-between;align-items:center}
-    .title{font-size:16px;font-weight:700}.muted{font-size:11px;color:var(--muted)}
-    .avatar{display:grid;place-items:center;height:220px;margin:6px 0;border:1px solid var(--line);border-radius:12px;background:radial-gradient(circle at 35% 30%,#49d6ff,#2d5ee2 45%,#4b2ea8 80%)}
-    .bird{font-size:78px;animation:float 2.8s ease-in-out infinite}
-    .chat{padding:10px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#090f1c;min-height:0}
-    .msg{font-size:13px;line-height:1.35;max-width:85%;padding:8px 10px;border-radius:10px;margin:7px 0}
-    .me{margin-left:auto;background:#173d68;border:1px solid #2a6cb4}.ai{background:#1f2342;border:1px solid #3e4a8b}
-    .controls{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:10px}
-    input{padding:10px;border-radius:10px;border:1px solid var(--line);background:#0b1323;color:var(--txt);font-size:13px}
-    button{padding:10px 12px;border-radius:10px;border:1px solid #325c97;background:#15345e;color:#e3eeff;font-size:12px}
-    .green{background:#154022;border-color:#2f8d4e}
-    .drop{margin-top:8px;border:1px dashed #4d6ea6;border-radius:10px;padding:10px;text-align:center;font-size:12px}
-    .small{font-size:11px}
-    .project{padding:8px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;font-size:12px}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-    @media(max-width:980px){.app{grid-template-columns:1fr;height:auto}}
+    :root{
+      --bg:#0b1020; --panel:#11182bcc; --panel2:#0f1526ee; --line:#2b3d67;
+      --txt:#e8efff; --muted:#9cb0d6; --accent:#63d1ff; --ok:#22c55e;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:var(--bg);color:var(--txt);overflow:hidden}
+
+    #world{position:fixed;inset:0;z-index:0;background:radial-gradient(circle at 20% 0%,#18284b,#0b1020 60%)}
+
+    .shell{position:relative;z-index:2;height:100%;display:grid;grid-template-columns:300px 1fr;transition:grid-template-columns .25s ease}
+    .shell.collapsed{grid-template-columns:0 1fr}
+
+    .sidebar{
+      background:var(--panel);border-right:1px solid var(--line);backdrop-filter:blur(10px);
+      overflow:hidden;display:flex;flex-direction:column;min-width:0
+    }
+    .side-head{padding:14px 12px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between}
+    .side-title{font-size:14px;font-weight:700}
+    .side-body{padding:10px;overflow:auto}
+    .chip{display:block;width:100%;text-align:left;padding:10px;border:1px solid var(--line);background:#121b31;border-radius:10px;color:var(--txt);margin-bottom:8px;font-size:13px}
+    .muted{color:var(--muted);font-size:12px}
+
+    .main{display:grid;grid-template-rows:auto 1fr auto;min-width:0}
+    .top{
+      height:56px;display:flex;align-items:center;gap:10px;padding:0 10px;
+      background:var(--panel2);border-bottom:1px solid var(--line)
+    }
+    .icon-btn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#13203a;color:#dce9ff;display:grid;place-items:center;cursor:pointer}
+    .title{font-size:14px;font-weight:700}
+    .state{margin-left:auto;font-size:12px;color:#b8ffd0}
+
+    .chat-wrap{padding:10px;overflow:auto}
+    .chat{max-width:900px;margin:0 auto}
+    .msg{max-width:82%;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.4;margin:8px 0}
+    .ai{background:#1d2542;border:1px solid #3f4d88}
+    .me{margin-left:auto;background:#17406f;border:1px solid #2f75be}
+
+    .dock{
+      background:var(--panel2);border-top:1px solid var(--line);padding:10px;
+      display:grid;grid-template-columns:auto 1fr auto auto;gap:8px
+    }
+    input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0f172a;color:var(--txt);font-size:13px}
+    .btn{padding:10px 12px;border-radius:12px;border:1px solid #365f97;background:#15345e;color:#e1eeff;cursor:pointer;font-size:12px}
+    .btn.green{background:#144128;border-color:#2f8d4e}
+
+    .fab{
+      position:fixed;left:10px;top:66px;z-index:3;
+      width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#13203a;color:#dce9ff;display:grid;place-items:center;cursor:pointer
+    }
+
+    .toast{position:fixed;right:12px;top:66px;z-index:3;background:#13203a;border:1px solid var(--line);padding:8px 10px;border-radius:10px;font-size:12px;display:none}
+
+    @media (max-width:900px){
+      .shell{grid-template-columns:0 1fr}
+      .sidebar{position:fixed;inset:56px auto 0 0;width:86vw;max-width:320px;z-index:4;border-right:1px solid var(--line)}
+      .shell.collapsed .sidebar{transform:translateX(-100%)}
+      .shell:not(.collapsed) .sidebar{transform:translateX(0)}
+    }
   </style>
 </head>
 <body>
-  <div class="app">
-    <aside class="panel left">
-      <div class="title">Raven Avatar</div>
-      <div class="muted">Always visible fallback avatar</div>
-      <div class="avatar"><div class="bird" id="bird">🦅</div></div>
-      <div class="small" id="voiceState">Voice: locked</div>
-      <button id="unlock" style="margin-top:8px;width:100%">🔊 Enable Voice</button>
-      <div class="drop" id="drop">Tap/Drop images, videos, files<input id="fileInput" type="file" multiple hidden></div>
-      <ul id="uploads" class="small"></ul>
+  <canvas id="world"></canvas>
+
+  <button id="drawerBtn" class="fab">☰</button>
+  <div class="toast" id="toast"></div>
+
+  <div class="shell collapsed" id="shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="side-head">
+        <div>
+          <div class="side-title">Raven Mission</div>
+          <div class="muted">Gemini-style side rail</div>
+        </div>
+        <button class="icon-btn" id="closeSide">✕</button>
+      </div>
+      <div class="side-body">
+        <button class="chip" data-cmd="Run full wealth audit">Run full wealth audit</button>
+        <button class="chip" data-cmd="Open trading bot status">Open trading bot status</button>
+        <button class="chip" data-cmd="Show today's handoff">Show today's handoff</button>
+        <hr style="border-color:#2b3d67;opacity:.5">
+        <div class="muted">Uploads</div>
+        <input id="fileInput" type="file" multiple style="margin-top:8px;width:100%;font-size:12px;color:#b9cfff" />
+        <ul id="uploads" class="muted" style="padding-left:16px"></ul>
+      </div>
     </aside>
 
-    <main class="mid">
-      <div class="panel top"><div><div class="title">Raven World Mission Control</div><div class="muted">Telegram is backup • web is primary hub</div></div><div class="muted" id="conn">Online</div></div>
-      <section class="panel chat" id="chat"><div class="msg ai">I’m here. This build fixes text size + always-on avatar + voice unlock flow.</div></section>
-      <div class="panel controls"><input id="text" placeholder="Type command..."/><button id="send">Send</button><button id="mic" class="green">🎙️ Speak</button></div>
-      <div class="panel" style="padding:8px 10px" class="small"><div class="muted">If no sound: tap Enable Voice, then send "test audio".</div></div>
+    <main class="main">
+      <div class="top">
+        <button class="icon-btn" id="menuBtn">☰</button>
+        <div class="title">🦅 Raven World (Gemini-style UI)</div>
+        <div class="state" id="voiceState">Voice: locked</div>
+      </div>
+
+      <div class="chat-wrap" id="chatWrap">
+        <div class="chat" id="chat">
+          <div class="msg ai">Okay Big Homie — this is the Gemini-style build with slide-out side rail, bottom dock, voice controls, and live 3D Raven flying over Earth in the background.</div>
+        </div>
+      </div>
+
+      <div class="dock">
+        <button id="unlockBtn" class="btn">🔊 Enable</button>
+        <input id="text" type="text" placeholder="Talk to Raven…" />
+        <button id="micBtn" class="btn green">🎙️ Speak</button>
+        <button id="sendBtn" class="btn">Send</button>
+      </div>
     </main>
-
-    <aside class="panel right">
-      <div class="title">Pulse</div>
-      <div class="project">Voice Avatar Portal — In Progress</div>
-      <div class="project">Trading Bot — Queued</div>
-      <div class="project">AI Advertising — Queued</div>
-    </aside>
   </div>
 
-<script>
-const chat=document.getElementById('chat'), text=document.getElementById('text'), voiceState=document.getElementById('voiceState'), bird=document.getElementById('bird');
-let unlocked=false, talking=false, listening=false;
-function add(role,msg){const d=document.createElement('div');d.className='msg '+(role==='me'?'me':'ai');d.textContent=msg;chat.appendChild(d);chat.scrollTop=chat.scrollHeight;}
-function setAnim(){bird.style.transform=(talking||listening)?'scale(1.08)':'scale(1)';}
-function speak(msg){
-  if(!('speechSynthesis' in window)){add('ai','This browser blocks speech synthesis.');return;}
-  if(!unlocked){add('ai','Tap Enable Voice first.');return;}
-  const u=new SpeechSynthesisUtterance(msg);
-  const voices=speechSynthesis.getVoices();
-  if(voices && voices.length) u.voice=voices.find(v=>/en/i.test(v.lang))||voices[0];
-  u.rate=1;u.pitch=0.95;
-  u.onstart=()=>{talking=true;voiceState.textContent='Voice: speaking';setAnim();};
-  u.onend=()=>{talking=false;voiceState.textContent='Voice: idle';setAnim();};
-  speechSynthesis.cancel(); speechSynthesis.speak(u);
-}
-function reply(m){const r=`Got it: ${m}. Live backend wiring is next.`;add('ai',r);speak(r);}
-send.onclick=()=>{const v=text.value.trim();if(!v)return;add('me',v);text.value='';reply(v)};
-text.addEventListener('keydown',e=>{if(e.key==='Enter')send.onclick()});
-unlock.onclick=()=>{unlocked=true;const p=new SpeechSynthesisUtterance('Voice unlocked. Raven online.');p.onstart=()=>{talking=true;voiceState.textContent='Voice: speaking';setAnim();};p.onend=()=>{talking=false;voiceState.textContent='Voice: idle';setAnim();};speechSynthesis.cancel();speechSynthesis.speak(p);};
-if('speechSynthesis' in window){speechSynthesis.onvoiceschanged=()=>{};}
-const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(SR){const rec=new SR();rec.lang='en-US';rec.interimResults=false;rec.onstart=()=>{listening=true;voiceState.textContent='Voice: listening';setAnim();};rec.onend=()=>{listening=false;voiceState.textContent='Voice: idle';setAnim();};rec.onresult=e=>{const t=e.results[0][0].transcript;add('me',t);reply(t)};mic.onclick=()=>rec.start();} else {mic.disabled=true;}
-const drop=document.getElementById('drop'), fi=document.getElementById('fileInput'), ul=document.getElementById('uploads');
-drop.onclick=()=>fi.click();
-function addFiles(files){[...files].forEach(f=>{const li=document.createElement('li');li.textContent=`${f.name} (${Math.round(f.size/1024)} KB)`;ul.prepend(li)});}
-fi.addEventListener('change',()=>addFiles(fi.files));
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+    // ====== 3D WORLD: Earth + Raven orbit ======
+    (() => {
+      const c = document.getElementById('world');
+      const r = new THREE.WebGLRenderer({canvas:c, antialias:true, alpha:true});
+      const s = new THREE.Scene();
+      const cam = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, .1, 1000);
+      cam.position.set(0, 1.8, 11);
+      r.setPixelRatio(Math.min(devicePixelRatio, 2));
+      r.setSize(innerWidth, innerHeight);
+
+      s.add(new THREE.AmbientLight(0x9fb7ff, .55));
+      const p1 = new THREE.PointLight(0x63d1ff, 2.2, 60); p1.position.set(6,5,8); s.add(p1);
+      const p2 = new THREE.PointLight(0x8b5cf6, 1.5, 60); p2.position.set(-7,1,-6); s.add(p2);
+
+      const starsGeo = new THREE.BufferGeometry();
+      const n = 1700, arr = new Float32Array(n*3);
+      for(let i=0;i<n;i++){arr[i*3]=(Math.random()-.5)*140;arr[i*3+1]=(Math.random()-.5)*90;arr[i*3+2]=(Math.random()-.5)*140;}
+      starsGeo.setAttribute('position', new THREE.BufferAttribute(arr,3));
+      s.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({size:.16,color:0xb9d7ff,transparent:true,opacity:.85})));
+
+      const earth = new THREE.Mesh(
+        new THREE.SphereGeometry(2.2, 64, 64),
+        new THREE.MeshStandardMaterial({color:0x2e5fa8, emissive:0x12345f, emissiveIntensity:.35, roughness:.85, metalness:.05})
+      );
+      earth.position.y = -1.0;
+      s.add(earth);
+
+      const cloud = new THREE.Mesh(
+        new THREE.SphereGeometry(2.28, 64, 64),
+        new THREE.MeshStandardMaterial({color:0x9ec8ff, transparent:true, opacity:.12})
+      );
+      cloud.position.copy(earth.position); s.add(cloud);
+
+      // Raven = emoji sprite billboard
+      const cv = document.createElement('canvas'); cv.width=256; cv.height=256;
+      const cx = cv.getContext('2d'); cx.font='160px serif'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText('🦅',128,132);
+      const tex = new THREE.CanvasTexture(cv);
+      const raven = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true}));
+      raven.scale.set(1.6,1.6,1.6);
+      s.add(raven);
+
+      let t=0;
+      const loop=()=>{
+        requestAnimationFrame(loop); t += 0.007;
+        earth.rotation.y += 0.0016;
+        cloud.rotation.y += 0.0021;
+        const rad=4.8;
+        raven.position.set(Math.cos(t)*rad, Math.sin(t*1.6)*0.55 + 0.3, Math.sin(t)*rad);
+        p1.intensity = 2 + Math.sin(t*5)*0.3;
+        cam.lookAt(0,0,0);
+        r.render(s,cam);
+      };
+      loop();
+      addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight);});
+    })();
+
+    // ====== UI ======
+    const shell = document.getElementById('shell');
+    const drawerBtn = document.getElementById('drawerBtn');
+    const menuBtn = document.getElementById('menuBtn');
+    const closeSide = document.getElementById('closeSide');
+    const chat = document.getElementById('chat');
+    const text = document.getElementById('text');
+    const toast = document.getElementById('toast');
+    const voiceState = document.getElementById('voiceState');
+
+    const toggleSide = () => shell.classList.toggle('collapsed');
+    drawerBtn.onclick = toggleSide;
+    menuBtn.onclick = toggleSide;
+    closeSide.onclick = () => shell.classList.add('collapsed');
+
+    function notify(msg){toast.textContent=msg;toast.style.display='block';setTimeout(()=>toast.style.display='none',1800);}
+    function add(role, msg){const d=document.createElement('div'); d.className='msg '+(role==='me'?'me':'ai'); d.textContent=msg; chat.appendChild(d); chat.parentElement.scrollTop = chat.parentElement.scrollHeight;}
+
+    // Voice
+    let unlocked=false;
+    function speak(msg){
+      if(!('speechSynthesis' in window)){ notify('Speech output not supported'); return; }
+      if(!unlocked){ notify('Tap Enable first'); return; }
+      const u = new SpeechSynthesisUtterance(msg);
+      u.rate = 1; u.pitch = .95;
+      u.onstart = ()=> voiceState.textContent='Voice: speaking';
+      u.onend = ()=> voiceState.textContent='Voice: idle';
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    }
+
+    function reply(input){
+      const r = `Received: ${input}. Gemini-style layout is live. Next step is wiring this UI to your real backend session.`;
+      add('ai', r);
+      speak(r);
+    }
+
+    document.getElementById('sendBtn').onclick = ()=>{
+      const v=text.value.trim(); if(!v) return; add('me', v); text.value=''; reply(v);
+    };
+    text.addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('sendBtn').click(); });
+
+    document.getElementById('unlockBtn').onclick = ()=>{
+      unlocked=true;
+      if('speechSynthesis' in window){
+        const prime = new SpeechSynthesisUtterance('Voice unlocked. Raven online.');
+        prime.onstart=()=>voiceState.textContent='Voice: speaking';
+        prime.onend=()=>voiceState.textContent='Voice: idle';
+        speechSynthesis.cancel(); speechSynthesis.speak(prime);
+      }
+    };
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(SR){
+      const rec = new SR(); rec.lang='en-US'; rec.interimResults=false;
+      rec.onstart=()=>voiceState.textContent='Voice: listening';
+      rec.onend=()=>voiceState.textContent='Voice: idle';
+      rec.onresult=(e)=>{ const t=e.results[0][0].transcript; add('me',t); reply(t); };
+      document.getElementById('micBtn').onclick = ()=> rec.start();
+    } else {
+      document.getElementById('micBtn').disabled = true;
+      notify('Speech input not supported in this browser');
+    }
+
+    // quick commands
+    document.querySelectorAll('.chip').forEach(btn=>btn.onclick=()=>{add('me',btn.dataset.cmd); reply(btn.dataset.cmd);});
+
+    // uploads
+    const fileInput = document.getElementById('fileInput');
+    const uploads = document.getElementById('uploads');
+    fileInput.addEventListener('change', ()=>{
+      [...fileInput.files].forEach(f=>{const li=document.createElement('li'); li.textContent=`${f.name} (${Math.round(f.size/1024)} KB)`; uploads.prepend(li);});
+      notify('Files attached locally');
+    });
+  </script>
 </body>
 </html>
