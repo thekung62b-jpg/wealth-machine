@@ -3,167 +3,292 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Raven World // Mission Control</title>
+  <title>Raven World 3D • Mission Control</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#05060b;--card:rgba(12,16,28,.55);--line:rgba(140,180,255,.22);
-      --txt:#e8efff;--muted:#9db1d9;--cyan:#55d6ff;--vio:#8b5cf6;--ok:#22c55e;
+      --text:#e8f1ff;--muted:#9fb3d9;--line:rgba(129,170,255,.28);--glass:rgba(10,16,30,.52);
+      --blue:#59d4ff;--vio:#8b5cf6;--ok:#22c55e;
     }
-    *{box-sizing:border-box} html,body{height:100%}
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:#05060b;color:var(--txt);overflow:hidden}
-    #bg3d{position:fixed;inset:0;z-index:0}
-    .glow{position:fixed;inset:0;z-index:1;pointer-events:none;background:
-      radial-gradient(40rem 24rem at 15% 10%, rgba(76,201,240,.15), transparent 60%),
-      radial-gradient(42rem 26rem at 86% 20%, rgba(139,92,246,.16), transparent 60%)}
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:#04060d;color:var(--text);font-family:Inter,system-ui,Segoe UI,Arial}
+    #scene{position:fixed;inset:0;z-index:0}
 
-    .app{position:relative;z-index:2;height:100%;padding:14px;display:grid;grid-template-columns:320px 1fr 320px;gap:12px}
-    .panel{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
-    .left,.right{padding:14px;overflow:auto}
-    .mid{display:grid;grid-template-rows:auto 1fr auto;gap:10px;min-width:0}
+    .hud{position:fixed;inset:0;z-index:2;display:grid;grid-template-columns:320px 1fr 340px;gap:12px;padding:12px;pointer-events:none}
+    .panel{pointer-events:auto;background:var(--glass);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+    .left,.right{padding:14px;overflow:auto;max-height:calc(100vh - 24px)}
+    .center{display:grid;grid-template-rows:auto 1fr auto auto;gap:10px;min-width:0}
 
-    .title{font-weight:800;letter-spacing:.3px}
-    .sub{font-size:12px;color:var(--muted)}
-    .status{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+    .title{font-size:18px;font-weight:800;letter-spacing:.2px}
+    .muted{font-size:12px;color:var(--muted)}
+    .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+    .kpi{padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(10,18,36,.55)}
+    .kpi b{display:block;font-size:18px}
+
+    .status{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px}
     .dot{width:8px;height:8px;border-radius:50%;background:#6ee7b7;box-shadow:0 0 14px #6ee7b7}
 
-    .orb-wrap{display:grid;place-items:center;padding-top:6px}
-    .orb{width:210px;height:210px;border-radius:50%;position:relative;
-      background:radial-gradient(circle at 35% 28%, #99f6ff, #3b82f6 42%, #4f46e5 65%, #090f1e 88%);
-      box-shadow:0 0 0 2px rgba(147,197,253,.25),0 0 80px rgba(76,201,240,.22), inset 0 0 48px rgba(255,255,255,.25);
-      animation:float 4.8s ease-in-out infinite}
-    .orb::after{content:'🦅';position:absolute;inset:0;display:grid;place-items:center;font-size:72px}
-    .ring,.ring2{position:absolute;inset:-14px;border-radius:50%;border:1px dashed rgba(125,211,252,.45);animation:spin 16s linear infinite}
-    .ring2{inset:-30px;border-style:solid;border-color:rgba(139,92,246,.35);animation-duration:24s;animation-direction:reverse}
-
-    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
-    .tile{padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(10,16,30,.55)}
-    .tile b{display:block;font-size:18px}
-
-    .top{display:flex;justify-content:space-between;align-items:center;padding:12px 14px}
-    .chat{padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(6,10,20,.52);overflow:auto;min-height:0}
+    .chat{padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(6,10,20,.56);overflow:auto;min-height:0}
     .msg{max-width:82%;padding:10px 12px;border-radius:12px;margin:8px 0;line-height:1.35}
-    .me{margin-left:auto;background:linear-gradient(135deg,#143258,#1c4f86);border:1px solid #2a6cb6}
-    .ai{background:linear-gradient(135deg,#1a1c34,#21274d);border:1px solid #3a4687}
-    .controls{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:12px}
-    input[type=text]{padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(9,14,26,.85);color:var(--txt)}
-    .btn{padding:10px 12px;border-radius:12px;border:1px solid #335b97;background:#123158;color:#dbeafe;cursor:pointer;font-weight:600}
-    .btn.green{background:#12351f;border-color:#1f7a3e}
+    .me{margin-left:auto;background:linear-gradient(135deg,#173964,#1f5b98);border:1px solid #2f74bb}
+    .ai{background:linear-gradient(135deg,#1d1f3a,#252c56);border:1px solid #404d92}
 
-    .drop{margin-top:10px;border:1px dashed rgba(125,211,252,.45);border-radius:12px;padding:12px;text-align:center;background:rgba(8,14,28,.45)}
-    .drop.drag{border-color:#22c55e;background:rgba(34,197,94,.12)}
+    .controls{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:12px}
+    input[type=text]{padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(8,14,26,.9);color:var(--text)}
+    .btn{padding:10px 12px;border-radius:12px;border:1px solid #355e99;background:#123158;color:#dbeafe;cursor:pointer;font-weight:600}
+    .btn.green{background:#12351f;border-color:#1f7a3e}
+    .btn:hover{filter:brightness(1.08)}
+
+    .drop{margin-top:12px;border:1px dashed rgba(125,211,252,.45);border-radius:12px;padding:12px;text-align:center;background:rgba(8,14,28,.45)}
+    .drop.drag{border-color:var(--ok);background:rgba(34,197,94,.12)}
     .list{font-size:12px;color:#c9daf8;line-height:1.45;max-height:160px;overflow:auto}
 
-    .project{padding:10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:rgba(8,14,28,.5)}
+    .project{padding:10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:rgba(8,14,28,.52)}
     .badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
     .in{color:#86efac;border-color:#22c55e66}.q{color:#fde68a;border-color:#f59e0b66}
 
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-    @media(max-width:1100px){.app{grid-template-columns:1fr;overflow:auto;height:auto}body{overflow:auto}}
+    .quick{display:flex;gap:8px;flex-wrap:wrap;padding:10px}
+    .chip{font-size:12px;padding:8px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(9,18,33,.6);cursor:pointer}
+
+    @media (max-width:1200px){.hud{grid-template-columns:1fr;overflow:auto}.left,.right{max-height:none}}
   </style>
 </head>
 <body>
-  <canvas id="bg3d"></canvas><div class="glow"></div>
-  <div class="app">
+  <canvas id="scene"></canvas>
+
+  <div class="hud">
     <aside class="panel left">
-      <div class="title">Raven Core</div>
-      <div class="sub">Immersive Mission Control</div>
-      <div class="orb-wrap"><div class="orb" id="orb"><div class="ring"></div><div class="ring2"></div></div></div>
-      <div class="kpi">
-        <div class="tile"><span class="sub">Voice</span><b id="voiceState">Locked</b></div>
-        <div class="tile"><span class="sub">Mode</span><b>World</b></div>
-        <div class="tile"><span class="sub">Uploads</span><b id="upCount">0</b></div>
-        <div class="tile"><span class="sub">Avatar</span><b>Raven</b></div>
+      <div class="title">🦅 Raven Core</div>
+      <div class="muted">3D Avatar World • Vibrant Motion • Telegram Backup</div>
+      <div class="kpis">
+        <div class="kpi"><span class="muted">Voice</span><b id="voiceState">Locked</b></div>
+        <div class="kpi"><span class="muted">Avatar</span><b>Raven 3D</b></div>
+        <div class="kpi"><span class="muted">Uploads</span><b id="upCount">0</b></div>
+        <div class="kpi"><span class="muted">Scene</span><b>Live</b></div>
       </div>
-      <div class="drop" id="drop">Drop images/videos/files here<br><span class="sub">or tap to choose</span><input id="fileInput" type="file" multiple hidden></div>
+
+      <div class="drop" id="drop">Drop images / videos / files here<br><span class="muted">or tap to choose</span>
+        <input id="fileInput" type="file" multiple hidden>
+      </div>
       <ul id="uploads" class="list"></ul>
     </aside>
 
-    <main class="mid">
-      <div class="panel top">
-        <div><div class="title">🦅 Raven World // Mission Bridge</div><div class="sub">Cinematic UI + voice + uploads</div></div>
-        <div class="status"><span class="dot"></span><span id="conn">Ready</span></div>
+    <main class="center">
+      <div class="panel" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div class="title">Raven World 3D // Mission Control</div>
+          <div class="muted">Now with moving 3D avatar + cinematic motion</div>
+        </div>
+        <div class="status"><span class="dot"></span><span id="conn">Online</span></div>
       </div>
+
       <section class="panel chat" id="chat">
-        <div class="msg ai">I hear you. This version is upgraded. Tap <b>Enable Voice</b> first (mobile browser policy), then Speak.</div>
+        <div class="msg ai">You’re right. This is now the cinematic 3D build. Tap <b>Enable Voice</b>, then command me.</div>
       </section>
+
       <div class="panel controls">
         <input id="text" type="text" placeholder="Command Raven...">
         <button class="btn" id="send">Send</button>
         <button class="btn green" id="mic">🎙️ Speak</button>
       </div>
-      <div class="panel" style="padding:10px 12px;display:flex;gap:8px;align-items:center;justify-content:space-between">
-        <div class="sub">If voice is silent on phone, tap Enable Voice once.</div>
+
+      <div class="panel" style="padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div class="muted">Mobile browsers need one tap for audio permissions.</div>
         <button class="btn" id="unlock">🔊 Enable Voice</button>
       </div>
     </main>
 
     <aside class="panel right">
       <div class="title">Project Pulse</div>
-      <div class="project"><b>Voice Avatar Portal</b> <span class="badge in">In Progress</span><div class="sub">Now improving realism + backend bridge</div></div>
-      <div class="project"><b>Trading Bot</b> <span class="badge q">Queued</span><div class="sub">Signal/risk/execution loops</div></div>
-      <div class="project"><b>AI Advertising</b> <span class="badge q">Queued</span><div class="sub">Offer + creative + funnel stack</div></div>
+      <div class="project"><b>Voice Avatar Portal</b> <span class="badge in">In Progress</span><div class="muted">3D world + backend bridge</div></div>
+      <div class="project"><b>Trading Bot</b> <span class="badge q">Queued</span><div class="muted">Signal/risk/execution loops</div></div>
+      <div class="project"><b>AI Advertising</b> <span class="badge q">Queued</span><div class="muted">Offer/creative/funnel</div></div>
       <hr style="border-color:#24324a">
-      <div class="sub">Phase 2 next: live backend routing, animated talking states, 3D avatar scene.</div>
+      <div class="muted">Quick commands</div>
+      <div class="quick">
+        <button class="chip" data-cmd="Run wealth audit">Run wealth audit</button>
+        <button class="chip" data-cmd="Open trading board">Open trading board</button>
+        <button class="chip" data-cmd="Summarize today">Summarize today</button>
+      </div>
     </aside>
   </div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-<script>
-  // 3D background
-  const canvas=document.getElementById('bg3d');
-  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-  const scene=new THREE.Scene();
-  const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,1000);camera.position.z=28;
-  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  const starsGeo=new THREE.BufferGeometry();const count=1800;const arr=new Float32Array(count*3);
-  for(let i=0;i<count*3;i++) arr[i]=(Math.random()-.5)*180; starsGeo.setAttribute('position',new THREE.BufferAttribute(arr,3));
-  const stars=new THREE.Points(starsGeo,new THREE.PointsMaterial({size:.18,color:0xb6d3ff,transparent:true,opacity:.9})); scene.add(stars);
-  const ring=new THREE.Mesh(new THREE.TorusGeometry(7.5,.12,16,220), new THREE.MeshBasicMaterial({color:0x55d6ff,transparent:true,opacity:.35})); scene.add(ring);
-  const ring2=new THREE.Mesh(new THREE.TorusGeometry(9.8,.09,16,220), new THREE.MeshBasicMaterial({color:0x8b5cf6,transparent:true,opacity:.28})); ring2.rotation.x=1.2; scene.add(ring2);
-  function animate(){requestAnimationFrame(animate);stars.rotation.y+=.0006;ring.rotation.z+=.003;ring2.rotation.y-=.0025;renderer.render(scene,camera)} animate();
-  addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+  <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+  <script>
+    // ===== 3D Scene =====
+    const canvas = document.getElementById('scene');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(58, innerWidth/innerHeight, 0.1, 1200);
+    camera.position.set(0, 2.4, 16);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
 
-  // chat + voice
-  const chat=document.getElementById('chat'),text=document.getElementById('text'),voiceState=document.getElementById('voiceState'),orb=document.getElementById('orb');
-  let voiceUnlocked=false;
-  function add(role,msg){const d=document.createElement('div');d.className='msg '+(role==='me'?'me':'ai');d.innerHTML=msg;chat.appendChild(d);chat.scrollTop=chat.scrollHeight}
-  function pulse(on){orb.style.boxShadow=on?'0 0 0 2px rgba(147,197,253,.35),0 0 120px rgba(76,201,240,.42), inset 0 0 60px rgba(255,255,255,.35)':'0 0 0 2px rgba(147,197,253,.25),0 0 80px rgba(76,201,240,.22), inset 0 0 48px rgba(255,255,255,.25)'}
-  function speak(t){
-    if(!('speechSynthesis' in window)){add('ai','Voice not supported on this browser.');return}
-    if(!voiceUnlocked){add('ai','Tap <b>Enable Voice</b> once, then I can speak.');return}
-    const u=new SpeechSynthesisUtterance(t);u.rate=1;u.pitch=.95;u.onstart=()=>{voiceState.textContent='Speaking';pulse(true)};u.onend=()=>{voiceState.textContent='Idle';pulse(false)};
-    speechSynthesis.cancel();speechSynthesis.speak(u);
-  }
-  function aiReply(m){const r=`Copy. Received: “${m}”. I’m ready to connect this world directly to your live backend next.`;add('ai',r);speak(r)}
+    // lights
+    const amb = new THREE.AmbientLight(0x8aa6ff, 0.7); scene.add(amb);
+    const key = new THREE.PointLight(0x55d6ff, 2.2, 60); key.position.set(6,6,8); scene.add(key);
+    const rim = new THREE.PointLight(0x8b5cf6, 1.8, 80); rim.position.set(-8,2,-6); scene.add(rim);
 
-  send.onclick=()=>{const v=text.value.trim();if(!v)return;add('me',v);text.value='';aiReply(v)};
-  text.addEventListener('keydown',e=>{if(e.key==='Enter')send.onclick()});
+    // particles
+    const starGeo = new THREE.BufferGeometry();
+    const N = 2600; const pos = new Float32Array(N*3);
+    for(let i=0;i<N;i++){ pos[i*3]=(Math.random()-.5)*160; pos[i*3+1]=(Math.random()-.5)*100; pos[i*3+2]=(Math.random()-.5)*160; }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ size:0.16, color:0xb9d7ff, transparent:true, opacity:0.9 }));
+    scene.add(stars);
 
-  unlock.onclick=()=>{
-    voiceUnlocked=true;
-    // prime voice per mobile autoplay policy
-    const prime=new SpeechSynthesisUtterance('Voice unlocked. Raven online.');
-    prime.onstart=()=>{voiceState.textContent='Speaking';pulse(true)};
-    prime.onend=()=>{voiceState.textContent='Idle';pulse(false)};
-    speechSynthesis.cancel();speechSynthesis.speak(prime);
-  };
+    // hologrid floor
+    const grid = new THREE.GridHelper(120, 120, 0x2a5aa0, 0x1b345c);
+    grid.position.y = -3.2; grid.material.opacity = 0.25; grid.material.transparent = true; scene.add(grid);
 
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(SR){const rec=new SR();rec.lang='en-US';rec.interimResults=false;rec.onstart=()=>{voiceState.textContent='Listening';pulse(true)};rec.onend=()=>{voiceState.textContent='Idle';pulse(false)};rec.onresult=e=>{const t=e.results[0][0].transcript;add('me',t);aiReply(t)};mic.onclick=()=>rec.start();}
-  else {mic.disabled=true;}
+    // raven avatar group (stylized)
+    const raven = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(1.8, 2),
+      new THREE.MeshStandardMaterial({ color:0x2240a8, emissive:0x12397a, emissiveIntensity:0.5, metalness:0.3, roughness:0.28 })
+    );
+    raven.add(body);
 
-  // uploads
-  const drop=document.getElementById('drop'),fi=document.getElementById('fileInput'),ul=document.getElementById('uploads'),upCount=document.getElementById('upCount');
-  drop.onclick=()=>fi.click();
-  const addFiles=(files)=>{[...files].forEach(f=>{const li=document.createElement('li');li.textContent=`${f.name} (${Math.round(f.size/1024)} KB)`;ul.prepend(li)});upCount.textContent=ul.children.length};
-  fi.addEventListener('change',()=>addFiles(fi.files));
-  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));
-  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));
-  drop.addEventListener('drop',e=>addFiles(e.dataTransfer.files));
-</script>
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(0.62, 32, 32),
+      new THREE.MeshStandardMaterial({ color:0x7dd3fc, emissive:0x30bfff, emissiveIntensity:1.4, metalness:0.1, roughness:0.2 })
+    );
+    core.position.set(0, 0.1, 1.1); raven.add(core);
+
+    const beak = new THREE.Mesh(
+      new THREE.ConeGeometry(0.22, 0.9, 24),
+      new THREE.MeshStandardMaterial({ color:0xffc857, emissive:0x8a4f00, emissiveIntensity:0.2 })
+    );
+    beak.rotation.x = Math.PI/2; beak.position.set(0, -0.15, 1.95); raven.add(beak);
+
+    function wing(side=1){
+      const g = new THREE.Group();
+      const w = new THREE.Mesh(
+        new THREE.ConeGeometry(0.52, 3.5, 20, 1, true),
+        new THREE.MeshStandardMaterial({ color:0x2d3e98, emissive:0x162a6a, emissiveIntensity:0.45, side:THREE.DoubleSide, metalness:0.2, roughness:0.35 })
+      );
+      w.rotation.z = side * Math.PI/2.3;
+      w.rotation.y = side * 0.32;
+      w.position.x = side * 1.95;
+      w.position.y = -0.2;
+      g.add(w);
+      return g;
+    }
+    const wingL = wing(1), wingR = wing(-1);
+    raven.add(wingL, wingR);
+
+    // orbit rings
+    const ring1 = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.045, 16, 220), new THREE.MeshBasicMaterial({ color:0x55d6ff, transparent:true, opacity:0.6 }));
+    const ring2 = new THREE.Mesh(new THREE.TorusGeometry(4.2, 0.035, 16, 220), new THREE.MeshBasicMaterial({ color:0x8b5cf6, transparent:true, opacity:0.5 }));
+    ring2.rotation.x = 1.2;
+    raven.add(ring1, ring2);
+
+    raven.position.y = 0.5;
+    scene.add(raven);
+
+    // camera parallax
+    let mx=0,my=0;
+    addEventListener('pointermove', e=>{ mx=(e.clientX/innerWidth-.5); my=(e.clientY/innerHeight-.5); });
+
+    let talking = false, listening = false;
+    function animate(){
+      requestAnimationFrame(animate);
+      const t = performance.now()*0.001;
+      stars.rotation.y += 0.0004;
+      raven.rotation.y = Math.sin(t*0.5)*0.25 + mx*0.35;
+      raven.position.y = 0.5 + Math.sin(t*1.2)*0.18;
+      wingL.rotation.z = 0.06 + Math.sin(t*3.8)*(listening?0.34:0.12) + (talking?0.16:0);
+      wingR.rotation.z = -0.06 - Math.sin(t*3.8)*(listening?0.34:0.12) - (talking?0.16:0);
+      ring1.rotation.z += 0.008;
+      ring2.rotation.y -= 0.006;
+      core.scale.setScalar(1 + Math.sin(t*6)*(talking?0.16:0.05));
+      key.intensity = 1.9 + Math.sin(t*4)*(talking?0.6:0.2);
+
+      camera.position.x += ((mx*2.2)-camera.position.x)*0.02;
+      camera.position.y += ((2.4-my*1.4)-camera.position.y)*0.02;
+      camera.lookAt(0, 0.6, 0);
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    addEventListener('resize', ()=>{
+      camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight);
+    });
+
+    // ===== UI + Voice =====
+    const chat = document.getElementById('chat');
+    const text = document.getElementById('text');
+    const voiceState = document.getElementById('voiceState');
+
+    function add(role,msg){
+      const d=document.createElement('div'); d.className='msg '+(role==='me'?'me':'ai'); d.innerHTML=msg;
+      chat.appendChild(d); chat.scrollTop = chat.scrollHeight;
+    }
+
+    let voiceUnlocked = false;
+    function speak(msg){
+      if(!('speechSynthesis' in window)){ add('ai','Voice unsupported on this browser.'); return; }
+      if(!voiceUnlocked){ add('ai','Tap <b>Enable Voice</b> once (mobile policy), then I can speak.'); return; }
+      const u = new SpeechSynthesisUtterance(msg);
+      u.rate = 1; u.pitch = 0.92;
+      u.onstart = ()=>{ talking=true; voiceState.textContent='Speaking'; };
+      u.onend = ()=>{ talking=false; voiceState.textContent='Idle'; };
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    }
+
+    function aiReply(user){
+      const r = `Command received: “${user}”. Raven World is live and moving. Next, I can wire this UI directly to your real assistant backend.`;
+      add('ai', r); speak(r);
+    }
+
+    document.getElementById('send').onclick = ()=>{
+      const v = text.value.trim(); if(!v) return;
+      add('me', v); text.value=''; aiReply(v);
+    };
+    text.addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('send').click(); });
+
+    document.getElementById('unlock').onclick = ()=>{
+      voiceUnlocked = true;
+      const prime = new SpeechSynthesisUtterance('Voice unlocked. Raven online.');
+      prime.onstart=()=>{ talking=true; voiceState.textContent='Speaking'; };
+      prime.onend=()=>{ talking=false; voiceState.textContent='Idle'; };
+      speechSynthesis.cancel(); speechSynthesis.speak(prime);
+    };
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if(SR){
+      const rec = new SR(); rec.lang='en-US'; rec.interimResults=false;
+      rec.onstart = ()=>{ listening=true; voiceState.textContent='Listening'; };
+      rec.onend = ()=>{ listening=false; voiceState.textContent='Idle'; };
+      rec.onresult = (e)=>{ const t=e.results[0][0].transcript; add('me',t); aiReply(t); };
+      document.getElementById('mic').onclick = ()=> rec.start();
+    } else {
+      document.getElementById('mic').disabled = true;
+      document.getElementById('mic').title = 'Speech recognition not supported in this browser';
+    }
+
+    // quick chips
+    document.querySelectorAll('.chip').forEach(ch => ch.onclick = ()=>{
+      const cmd = ch.dataset.cmd; add('me', cmd); aiReply(cmd);
+    });
+
+    // uploads
+    const drop = document.getElementById('drop');
+    const fi = document.getElementById('fileInput');
+    const ul = document.getElementById('uploads');
+    const upCount = document.getElementById('upCount');
+    drop.onclick = ()=> fi.click();
+    function addFiles(files){
+      [...files].forEach(f=>{ const li=document.createElement('li'); li.textContent=`${f.name} (${Math.round(f.size/1024)} KB)`; ul.prepend(li); });
+      upCount.textContent = ul.children.length;
+    }
+    fi.addEventListener('change', ()=> addFiles(fi.files));
+    ['dragenter','dragover'].forEach(ev=> drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.add('drag'); }));
+    ['dragleave','drop'].forEach(ev=> drop.addEventListener(ev,e=>{ e.preventDefault(); drop.classList.remove('drag'); }));
+    drop.addEventListener('drop', e=> addFiles(e.dataTransfer.files));
+  </script>
 </body>
 </html>
