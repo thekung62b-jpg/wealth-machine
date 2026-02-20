@@ -1,1 +1,1 @@
-{"id": "live_demo_launch_sanitized", "cmd": "start chrome \"https://www.tradingview.com/chart/\" \"https://www.oanda.com/demo-account/\" && python bravo_logger.py"}
+{"id": "ollama_glm5_restore_1", "cmd": "ollama run glm-5:cloud"}
