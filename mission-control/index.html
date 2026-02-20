@@ -1,144 +1,165 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Raven World • Mission Control</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raven World // Mission Control</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#05070d;--bg2:#0b1020;--card:rgba(16,22,40,.62);--line:rgba(120,170,255,.25);
-      --txt:#eaf1ff;--muted:#9ab0d3;--cyan:#4cc9f0;--vio:#8b5cf6;--ok:#22c55e;--warn:#f59e0b;
-      --shadow:0 18px 60px rgba(0,0,0,.45);
+      --bg:#05060b;--card:rgba(12,16,28,.55);--line:rgba(140,180,255,.22);
+      --txt:#e8efff;--muted:#9db1d9;--cyan:#55d6ff;--vio:#8b5cf6;--ok:#22c55e;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;font-family:Inter,system-ui,Segoe UI,Arial;color:var(--txt);overflow:hidden;
-      background: radial-gradient(1200px 700px at 15% -10%, #1a2b58 0%, transparent 60%),
-                  radial-gradient(900px 600px at 105% 20%, #341a5e 0%, transparent 60%),
-                  linear-gradient(150deg,var(--bg),var(--bg2));
-    }
-    #stars{position:fixed;inset:0;z-index:0;opacity:.45}
-    .app{position:relative;z-index:2;display:grid;grid-template-columns:360px 1fr 320px;gap:14px;height:100%;padding:14px}
-    .panel{background:var(--card);border:1px solid var(--line);backdrop-filter: blur(10px);border-radius:18px;box-shadow:var(--shadow)}
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:#05060b;color:var(--txt);overflow:hidden}
+    #bg3d{position:fixed;inset:0;z-index:0}
+    .glow{position:fixed;inset:0;z-index:1;pointer-events:none;background:
+      radial-gradient(40rem 24rem at 15% 10%, rgba(76,201,240,.15), transparent 60%),
+      radial-gradient(42rem 26rem at 86% 20%, rgba(139,92,246,.16), transparent 60%)}
+
+    .app{position:relative;z-index:2;height:100%;padding:14px;display:grid;grid-template-columns:320px 1fr 320px;gap:12px}
+    .panel{background:var(--card);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
     .left,.right{padding:14px;overflow:auto}
-    .mid{display:grid;grid-template-rows:auto 1fr auto;gap:12px;min-width:0}
-    .topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 16px}
-    .title{font-size:18px;font-weight:800;letter-spacing:.2px}
-    .pill{padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:#cfe4ff;font-size:12px;background:rgba(10,20,40,.45)}
+    .mid{display:grid;grid-template-rows:auto 1fr auto;gap:10px;min-width:0}
 
-    .avatar-wrap{display:grid;place-items:center;padding:8px}
-    .orb{
-      width:220px;height:220px;border-radius:50%;position:relative;
-      background: radial-gradient(circle at 30% 30%, #7dd3fc, #3b82f6 42%, #4f46e5 62%, #0f172a 88%);
-      box-shadow:0 0 0 2px rgba(147,197,253,.25),0 0 70px rgba(76,201,240,.25), inset 0 0 40px rgba(255,255,255,.25);
-      animation: float 5s ease-in-out infinite;
-    }
-    .orb::after{content:'🦅';position:absolute;inset:0;display:grid;place-items:center;font-size:72px;filter:drop-shadow(0 0 14px rgba(0,0,0,.55))}
-    .ring{position:absolute;inset:-14px;border-radius:50%;border:1px dashed rgba(125,211,252,.45);animation: spin 16s linear infinite}
-    .ring2{inset:-28px;border-style:solid;border-color:rgba(139,92,246,.35);animation-duration:22s;animation-direction:reverse}
+    .title{font-weight:800;letter-spacing:.3px}
+    .sub{font-size:12px;color:var(--muted)}
+    .status{display:inline-flex;gap:8px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+    .dot{width:8px;height:8px;border-radius:50%;background:#6ee7b7;box-shadow:0 0 14px #6ee7b7}
 
-    .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-    .stat{padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(8,15,28,.5)}
-    .stat b{display:block;font-size:18px}
-    .muted{color:var(--muted);font-size:12px}
+    .orb-wrap{display:grid;place-items:center;padding-top:6px}
+    .orb{width:210px;height:210px;border-radius:50%;position:relative;
+      background:radial-gradient(circle at 35% 28%, #99f6ff, #3b82f6 42%, #4f46e5 65%, #090f1e 88%);
+      box-shadow:0 0 0 2px rgba(147,197,253,.25),0 0 80px rgba(76,201,240,.22), inset 0 0 48px rgba(255,255,255,.25);
+      animation:float 4.8s ease-in-out infinite}
+    .orb::after{content:'🦅';position:absolute;inset:0;display:grid;place-items:center;font-size:72px}
+    .ring,.ring2{position:absolute;inset:-14px;border-radius:50%;border:1px dashed rgba(125,211,252,.45);animation:spin 16s linear infinite}
+    .ring2{inset:-30px;border-style:solid;border-color:rgba(139,92,246,.35);animation-duration:24s;animation-direction:reverse}
 
-    .chat{padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(8,12,24,.55);overflow:auto;min-height:0}
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+    .tile{padding:10px;border-radius:12px;border:1px solid var(--line);background:rgba(10,16,30,.55)}
+    .tile b{display:block;font-size:18px}
+
+    .top{display:flex;justify-content:space-between;align-items:center;padding:12px 14px}
+    .chat{padding:12px;border:1px solid var(--line);border-radius:14px;background:rgba(6,10,20,.52);overflow:auto;min-height:0}
     .msg{max-width:82%;padding:10px 12px;border-radius:12px;margin:8px 0;line-height:1.35}
-    .me{margin-left:auto;background:linear-gradient(135deg,#15325a,#1b4e86);border:1px solid #2f6cb4}
-    .ai{background:linear-gradient(135deg,#1a1833,#22264d);border:1px solid #3a4587}
-
+    .me{margin-left:auto;background:linear-gradient(135deg,#143258,#1c4f86);border:1px solid #2a6cb6}
+    .ai{background:linear-gradient(135deg,#1a1c34,#21274d);border:1px solid #3a4687}
     .controls{display:grid;grid-template-columns:1fr auto auto;gap:8px;padding:12px}
-    input[type=text]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(10,16,30,.75);color:var(--txt)}
-    .btn{padding:10px 12px;border-radius:12px;border:1px solid #355f98;background:#123158;color:#dbeafe;cursor:pointer;font-weight:600}
+    input[type=text]{padding:12px;border-radius:12px;border:1px solid var(--line);background:rgba(9,14,26,.85);color:var(--txt)}
+    .btn{padding:10px 12px;border-radius:12px;border:1px solid #335b97;background:#123158;color:#dbeafe;cursor:pointer;font-weight:600}
     .btn.green{background:#12351f;border-color:#1f7a3e}
-    .btn:hover{filter:brightness(1.08)}
 
-    .drop{border:1px dashed rgba(125,211,252,.45);border-radius:14px;padding:10px;text-align:center;background:rgba(8,14,28,.4)}
-    .drop.drag{background:rgba(34,197,94,.1);border-color:#22c55e}
-    .list{font-size:12px;color:#c8daf6;line-height:1.5;max-height:170px;overflow:auto}
+    .drop{margin-top:10px;border:1px dashed rgba(125,211,252,.45);border-radius:12px;padding:12px;text-align:center;background:rgba(8,14,28,.45)}
+    .drop.drag{border-color:#22c55e;background:rgba(34,197,94,.12)}
+    .list{font-size:12px;color:#c9daf8;line-height:1.45;max-height:160px;overflow:auto}
 
-    .project{padding:10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:rgba(10,18,34,.5)}
-    .badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);margin-left:8px}
-    .queued{color:#fde68a;border-color:#f59e0b66}
-    .run{color:#86efac;border-color:#22c55e66}
+    .project{padding:10px;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;background:rgba(8,14,28,.5)}
+    .badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--line)}
+    .in{color:#86efac;border-color:#22c55e66}.q{color:#fde68a;border-color:#f59e0b66}
 
-    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
     @keyframes spin{to{transform:rotate(360deg)}}
-    @media (max-width:1180px){.app{grid-template-columns:1fr;overflow:auto;height:auto}body{overflow:auto}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+    @media(max-width:1100px){.app{grid-template-columns:1fr;overflow:auto;height:auto}body{overflow:auto}}
   </style>
 </head>
 <body>
-<canvas id="stars"></canvas>
-<div class="app">
-  <aside class="panel left">
-    <div class="avatar-wrap">
-      <div class="orb" id="orb"><div class="ring"></div><div class="ring ring2"></div></div>
-    </div>
-    <h3 style="margin:8px 0 4px">Raven World</h3>
-    <div class="muted">Immersive Mission Control • Telegram is backup</div>
-    <div class="stat-grid">
-      <div class="stat"><span class="muted">Voice</span><b id="voiceState">Idle</b></div>
-      <div class="stat"><span class="muted">Mode</span><b>Ops</b></div>
-      <div class="stat"><span class="muted">Uploads</span><b id="upCount">0</b></div>
-      <div class="stat"><span class="muted">Avatar</span><b>Raven</b></div>
-    </div>
-    <div style="margin-top:12px" class="drop" id="dropzone">
-      Drop images, videos, files here<br><span class="muted">or click to select</span>
-      <input id="fileInput" type="file" multiple style="display:none">
-    </div>
-    <ul id="uploads" class="list"></ul>
-  </aside>
+  <canvas id="bg3d"></canvas><div class="glow"></div>
+  <div class="app">
+    <aside class="panel left">
+      <div class="title">Raven Core</div>
+      <div class="sub">Immersive Mission Control</div>
+      <div class="orb-wrap"><div class="orb" id="orb"><div class="ring"></div><div class="ring2"></div></div></div>
+      <div class="kpi">
+        <div class="tile"><span class="sub">Voice</span><b id="voiceState">Locked</b></div>
+        <div class="tile"><span class="sub">Mode</span><b>World</b></div>
+        <div class="tile"><span class="sub">Uploads</span><b id="upCount">0</b></div>
+        <div class="tile"><span class="sub">Avatar</span><b>Raven</b></div>
+      </div>
+      <div class="drop" id="drop">Drop images/videos/files here<br><span class="sub">or tap to choose</span><input id="fileInput" type="file" multiple hidden></div>
+      <ul id="uploads" class="list"></ul>
+    </aside>
 
-  <main class="mid">
-    <div class="panel topbar">
-      <div class="title">🦅 Little Homie • Mission Bridge</div>
-      <div class="pill">v1.5 Cinematic UI</div>
-    </div>
-    <section class="panel chat" id="chat">
-      <div class="msg ai">Welcome to Raven World. This is the upgraded interface. Speak or type to command Mission Control.</div>
-    </section>
-    <div class="panel controls">
-      <input id="text" type="text" placeholder="Command Raven... (e.g., run wealth audit, open trade dashboard)">
-      <button class="btn" id="send">Send</button>
-      <button class="btn green" id="mic">🎙️ Speak</button>
-    </div>
-  </main>
+    <main class="mid">
+      <div class="panel top">
+        <div><div class="title">🦅 Raven World // Mission Bridge</div><div class="sub">Cinematic UI + voice + uploads</div></div>
+        <div class="status"><span class="dot"></span><span id="conn">Ready</span></div>
+      </div>
+      <section class="panel chat" id="chat">
+        <div class="msg ai">I hear you. This version is upgraded. Tap <b>Enable Voice</b> first (mobile browser policy), then Speak.</div>
+      </section>
+      <div class="panel controls">
+        <input id="text" type="text" placeholder="Command Raven...">
+        <button class="btn" id="send">Send</button>
+        <button class="btn green" id="mic">🎙️ Speak</button>
+      </div>
+      <div class="panel" style="padding:10px 12px;display:flex;gap:8px;align-items:center;justify-content:space-between">
+        <div class="sub">If voice is silent on phone, tap Enable Voice once.</div>
+        <button class="btn" id="unlock">🔊 Enable Voice</button>
+      </div>
+    </main>
 
-  <aside class="panel right">
-    <h3 style="margin:4px 0 10px">Project Pulse</h3>
-    <div class="project"><b>Trading Bot</b><span class="badge queued">Queued</span><div class="muted">Signal + risk + execution loop</div></div>
-    <div class="project"><b>AI Advertising</b><span class="badge queued">Queued</span><div class="muted">Offer → creative → funnel ops</div></div>
-    <div class="project"><b>Voice Avatar Portal</b><span class="badge run">In Progress</span><div class="muted">Cinematic UI + live backend wiring</div></div>
-    <hr style="border-color:#25375a">
-    <div class="muted">Next upgrade: real-time backend bridge, persistent auth, command history, and live device control panel.</div>
-  </aside>
-</div>
+    <aside class="panel right">
+      <div class="title">Project Pulse</div>
+      <div class="project"><b>Voice Avatar Portal</b> <span class="badge in">In Progress</span><div class="sub">Now improving realism + backend bridge</div></div>
+      <div class="project"><b>Trading Bot</b> <span class="badge q">Queued</span><div class="sub">Signal/risk/execution loops</div></div>
+      <div class="project"><b>AI Advertising</b> <span class="badge q">Queued</span><div class="sub">Offer + creative + funnel stack</div></div>
+      <hr style="border-color:#24324a">
+      <div class="sub">Phase 2 next: live backend routing, animated talking states, 3D avatar scene.</div>
+    </aside>
+  </div>
 
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
-  // starfield
-  const c=document.getElementById('stars'),x=c.getContext('2d');
-  function rs(){c.width=innerWidth;c.height=innerHeight} rs(); addEventListener('resize',rs);
-  const stars=[...Array(120)].map(()=>({x:Math.random()*innerWidth,y:Math.random()*innerHeight,r:Math.random()*1.8+.3,v:Math.random()*.25+.05}));
-  (function anim(){x.clearRect(0,0,c.width,c.height);x.fillStyle='#dbeafe';for(const s of stars){x.globalAlpha=.6; x.beginPath();x.arc(s.x,s.y,s.r,0,7);x.fill(); s.y+=s.v; if(s.y>c.height){s.y=-3;s.x=Math.random()*c.width}} requestAnimationFrame(anim)})();
+  // 3D background
+  const canvas=document.getElementById('bg3d');
+  const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(60,innerWidth/innerHeight,.1,1000);camera.position.z=28;
+  renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  const starsGeo=new THREE.BufferGeometry();const count=1800;const arr=new Float32Array(count*3);
+  for(let i=0;i<count*3;i++) arr[i]=(Math.random()-.5)*180; starsGeo.setAttribute('position',new THREE.BufferAttribute(arr,3));
+  const stars=new THREE.Points(starsGeo,new THREE.PointsMaterial({size:.18,color:0xb6d3ff,transparent:true,opacity:.9})); scene.add(stars);
+  const ring=new THREE.Mesh(new THREE.TorusGeometry(7.5,.12,16,220), new THREE.MeshBasicMaterial({color:0x55d6ff,transparent:true,opacity:.35})); scene.add(ring);
+  const ring2=new THREE.Mesh(new THREE.TorusGeometry(9.8,.09,16,220), new THREE.MeshBasicMaterial({color:0x8b5cf6,transparent:true,opacity:.28})); ring2.rotation.x=1.2; scene.add(ring2);
+  function animate(){requestAnimationFrame(animate);stars.rotation.y+=.0006;ring.rotation.z+=.003;ring2.rotation.y-=.0025;renderer.render(scene,camera)} animate();
+  addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
 
-  const chat=document.getElementById('chat'),text=document.getElementById('text'),voiceState=document.getElementById('voiceState');
-  function add(role,msg){const d=document.createElement('div');d.className='msg '+(role==='me'?'me':'ai');d.textContent=msg;chat.appendChild(d);chat.scrollTop=chat.scrollHeight}
-  function speak(t){if(!('speechSynthesis'in window))return;const u=new SpeechSynthesisUtterance(t);u.rate=1;u.pitch=.95;speechSynthesis.cancel();speechSynthesis.speak(u)}
-  function reply(m){const r=`Command received: "${m}". World UI is live. Next step is connecting this directly to your live assistant backend.`;add('ai',r);speak(r)}
-  send.onclick=()=>{const v=text.value.trim();if(!v)return;add('me',v);text.value='';reply(v)};
+  // chat + voice
+  const chat=document.getElementById('chat'),text=document.getElementById('text'),voiceState=document.getElementById('voiceState'),orb=document.getElementById('orb');
+  let voiceUnlocked=false;
+  function add(role,msg){const d=document.createElement('div');d.className='msg '+(role==='me'?'me':'ai');d.innerHTML=msg;chat.appendChild(d);chat.scrollTop=chat.scrollHeight}
+  function pulse(on){orb.style.boxShadow=on?'0 0 0 2px rgba(147,197,253,.35),0 0 120px rgba(76,201,240,.42), inset 0 0 60px rgba(255,255,255,.35)':'0 0 0 2px rgba(147,197,253,.25),0 0 80px rgba(76,201,240,.22), inset 0 0 48px rgba(255,255,255,.25)'}
+  function speak(t){
+    if(!('speechSynthesis' in window)){add('ai','Voice not supported on this browser.');return}
+    if(!voiceUnlocked){add('ai','Tap <b>Enable Voice</b> once, then I can speak.');return}
+    const u=new SpeechSynthesisUtterance(t);u.rate=1;u.pitch=.95;u.onstart=()=>{voiceState.textContent='Speaking';pulse(true)};u.onend=()=>{voiceState.textContent='Idle';pulse(false)};
+    speechSynthesis.cancel();speechSynthesis.speak(u);
+  }
+  function aiReply(m){const r=`Copy. Received: “${m}”. I’m ready to connect this world directly to your live backend next.`;add('ai',r);speak(r)}
+
+  send.onclick=()=>{const v=text.value.trim();if(!v)return;add('me',v);text.value='';aiReply(v)};
   text.addEventListener('keydown',e=>{if(e.key==='Enter')send.onclick()});
 
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  if(SR){const rec=new SR();rec.lang='en-US';rec.interimResults=false;rec.onstart=()=>voiceState.textContent='Listening';rec.onend=()=>voiceState.textContent='Idle';rec.onresult=e=>{const t=e.results[0][0].transcript;add('me',t);reply(t)};mic.onclick=()=>rec.start();}
-  else {mic.disabled=true;voiceState.textContent='Unsupported'}
+  unlock.onclick=()=>{
+    voiceUnlocked=true;
+    // prime voice per mobile autoplay policy
+    const prime=new SpeechSynthesisUtterance('Voice unlocked. Raven online.');
+    prime.onstart=()=>{voiceState.textContent='Speaking';pulse(true)};
+    prime.onend=()=>{voiceState.textContent='Idle';pulse(false)};
+    speechSynthesis.cancel();speechSynthesis.speak(prime);
+  };
 
-  const drop=document.getElementById('dropzone'),fi=document.getElementById('fileInput'),ul=document.getElementById('uploads'),count=document.getElementById('upCount');
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR){const rec=new SR();rec.lang='en-US';rec.interimResults=false;rec.onstart=()=>{voiceState.textContent='Listening';pulse(true)};rec.onend=()=>{voiceState.textContent='Idle';pulse(false)};rec.onresult=e=>{const t=e.results[0][0].transcript;add('me',t);aiReply(t)};mic.onclick=()=>rec.start();}
+  else {mic.disabled=true;}
+
+  // uploads
+  const drop=document.getElementById('drop'),fi=document.getElementById('fileInput'),ul=document.getElementById('uploads'),upCount=document.getElementById('upCount');
   drop.onclick=()=>fi.click();
-  const addFiles=(files)=>{[...files].forEach(f=>{const li=document.createElement('li');li.textContent=`${f.name} (${Math.round(f.size/1024)} KB)`;ul.prepend(li)});count.textContent=ul.children.length};
+  const addFiles=(files)=>{[...files].forEach(f=>{const li=document.createElement('li');li.textContent=`${f.name} (${Math.round(f.size/1024)} KB)`;ul.prepend(li)});upCount.textContent=ul.children.length};
   fi.addEventListener('change',()=>addFiles(fi.files));
   ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('drag')}));
   ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('drag')}));
