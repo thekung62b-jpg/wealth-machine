@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Raven Mission Control</title>
+  <style>
+    :root{--bg:#0a0d16;--card:#111827;--line:#24324a;--txt:#e5eefc;--muted:#9ab0d3;--accent:#4cc9f0;--ok:#22c55e}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial;background:linear-gradient(135deg,#060913,#0c1324 60%,#0b1b2c);color:var(--txt)}
+    .wrap{max-width:1100px;margin:24px auto;padding:0 16px;display:grid;grid-template-columns:320px 1fr;gap:16px}
+    .card{background:rgba(17,24,39,.86);border:1px solid var(--line);border-radius:14px;padding:14px;backdrop-filter: blur(6px)}
+    .title{font-size:20px;font-weight:700;margin:0 0 10px}
+    .muted{color:var(--muted);font-size:13px}
+    .avatar{width:100%;aspect-ratio:1/1;border-radius:12px;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%,#1b2b4d,#091224 62%);border:1px solid #2e4470}
+    .raven{font-size:86px;filter:drop-shadow(0 0 10px #3b82f6)}
+    .badge{display:inline-block;padding:5px 9px;border-radius:999px;border:1px solid #335079;background:#0f1f36;color:#c7ddff;font-size:12px}
+    .chat{height:55vh;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:10px;background:#0b1322}
+    .msg{margin:8px 0;padding:10px 12px;border-radius:10px;max-width:85%}
+    .me{margin-left:auto;background:#133053;border:1px solid #214f87}
+    .ai{background:#1a1a2b;border:1px solid #343457}
+    .row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    input[type=text]{flex:1;padding:12px;border-radius:10px;border:1px solid var(--line);background:#0b1322;color:var(--txt)}
+    button,.btn{padding:10px 12px;border-radius:10px;border:1px solid #2a4f80;background:#12315a;color:#dbeafe;cursor:pointer}
+    button:hover,.btn:hover{filter:brightness(1.08)}
+    .green{background:#11381f;border-color:#1f7a3e;color:#d8ffe5}
+    .list{font-size:13px;line-height:1.5}
+    .small{font-size:12px}
+    @media (max-width:900px){.wrap{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="card">
+      <h1 class="title">🦅 Raven Mission Control</h1>
+      <div class="avatar"><div class="raven">🦅</div></div>
+      <p class="muted">Avatar: Little Homie (Raven) • Telegram = backup channel</p>
+      <p><span class="badge" id="statusBadge">Voice: Idle</span></p>
+
+      <hr style="border-color:#22324a">
+      <p class="muted">Upload inputs I can work with:</p>
+      <div class="list">
+        <label>📷 Images <input id="imgInput" type="file" accept="image/*" multiple></label><br>
+        <label>🎞️ Videos <input id="vidInput" type="file" accept="video/*" multiple></label><br>
+        <label>📄 Files <input id="fileInput" type="file" multiple></label>
+      </div>
+      <ul id="uploads" class="small muted"></ul>
+
+      <hr style="border-color:#22324a">
+      <p class="muted">Next step (backend): connect this UI to OpenClaw session API so every message routes live.</p>
+    </section>
+
+    <section class="card">
+      <div class="chat" id="chat">
+        <div class="msg ai">Raven online. Talk to me or type. I’ll respond with voice. Telegram stays as backup.</div>
+      </div>
+      <div class="row">
+        <input id="text" type="text" placeholder="Type command... (e.g., run trading audit)">
+        <button id="send">Send</button>
+        <button id="mic" class="green">🎙️ Speak</button>
+      </div>
+      <p class="muted small">Voice uses browser speech tools (Web Speech API). Best on Chrome/Edge desktop.</p>
+    </section>
+  </div>
+
+  <script>
+    const chat = document.getElementById('chat');
+    const text = document.getElementById('text');
+    const badge = document.getElementById('statusBadge');
+
+    function add(role, content){
+      const d=document.createElement('div'); d.className='msg '+(role==='me'?'me':'ai'); d.textContent=content;
+      chat.appendChild(d); chat.scrollTop = chat.scrollHeight;
+    }
+
+    function speak(t){
+      if(!('speechSynthesis' in window)) return;
+      const u=new SpeechSynthesisUtterance(t); u.rate=1; u.pitch=0.9;
+      window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+    }
+
+    function aiReply(user){
+      const reply = `Copy that. I received: "${user}". Portal is live. Next I can wire this to your live assistant backend for full two-way control.`;
+      add('ai', reply); speak(reply);
+    }
+
+    document.getElementById('send').onclick=()=>{
+      const v=text.value.trim(); if(!v) return;
+      add('me',v); text.value=''; aiReply(v);
+    };
+    text.addEventListener('keydown',e=>{if(e.key==='Enter') document.getElementById('send').click();});
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let rec=null;
+    if(SR){
+      rec = new SR(); rec.lang='en-US'; rec.interimResults=false;
+      rec.onstart=()=> badge.textContent='Voice: Listening...';
+      rec.onend=()=> badge.textContent='Voice: Idle';
+      rec.onresult=(e)=>{ const t=e.results[0][0].transcript; add('me',t); aiReply(t); };
+      document.getElementById('mic').onclick=()=>rec.start();
+    } else {
+      document.getElementById('mic').disabled=true; badge.textContent='Voice: Not supported';
+    }
+
+    function listFiles(input,label){
+      input.addEventListener('change',()=>{
+        const ul=document.getElementById('uploads');
+        [...input.files].forEach(f=>{const li=document.createElement('li'); li.textContent=`${label}: ${f.name} (${Math.round(f.size/1024)} KB)`; ul.appendChild(li);});
+      });
+    }
+    listFiles(document.getElementById('imgInput'),'Image');
+    listFiles(document.getElementById('vidInput'),'Video');
+    listFiles(document.getElementById('fileInput'),'File');
+  </script>
+</body>
+</html>
