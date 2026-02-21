@@ -1,9 +1,1 @@
-{
-  "commands": [
-    {
-      "id": "calc_test_1585",
-      "cmd": "start calc.exe",
-      "os": "windows"
-    }
-  ]
-}
+{"id":"calc_legacy_1587","cmd":"start calc.exe"}
