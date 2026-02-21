@@ -1,0 +1,10 @@
+{
+  "id": "ollama_glm5_restore_1",
+  "cmd": "ollama run glm-5:cloud",
+  "host": "DESKTOP-CA6S7AM",
+  "startedAt": "2026-02-21T02:56:15.349160+00:00",
+  "finishedAt": "2026-02-21T02:56:25.148592+00:00",
+  "exitCode": 1,
+  "stdout": "",
+  "stderr": ""
+}
