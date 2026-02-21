@@ -1,10 +1,10 @@
 {
-  "id": "ollama_glm5_restore_1",
-  "cmd": "ollama run glm-5:cloud",
+  "id": "open_calc_now_1530",
+  "cmd": "start calc.exe",
   "host": "DESKTOP-CA6S7AM",
-  "startedAt": "2026-02-21T02:56:15.349160+00:00",
-  "finishedAt": "2026-02-21T02:56:25.148592+00:00",
-  "exitCode": 1,
+  "startedAt": "2026-02-21T04:16:32.894551+00:00",
+  "finishedAt": "2026-02-21T04:16:34.937059+00:00",
+  "exitCode": 0,
   "stdout": "",
   "stderr": ""
 }
