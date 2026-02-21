@@ -1,1 +1,9 @@
-{"id":"rich_email_compose_1563","cmd":"start \"\" \"https://outlook.live.com/mail/0/deeplink/compose?to=admin%40surplusfundsriches.com&cc=teambuige%40gmail.com&subject=Partnership%20Inquiry%20-%20Surplus%20Fund%20Lead%20Submissions&body=Hi%20Shawn%20and%20Team%2C%0D%0A%0D%0AMy%20name%20is%20John%2C%20and%20I%27m%20the%20Project%20Manager%20for%20Greg%27s%20Team.%0D%0A%0D%0AWe%27re%20building%20a%20structured%20surplus-funds%20research%20pipeline%20and%20would%20like%20to%20establish%20a%20partner%20relationship%20with%20your%20team.%0D%0A%0D%0ABefore%20we%20begin%20submissions%2C%20could%20you%20please%20confirm%20your%20required%20lead%20criteria%2C%20submission%20format%2C%20compensation%2Fpayout%20timeline%2C%20and%20any%20onboarding%20documents%3F%0D%0A%0D%0AAlso%2C%20if%20you%20have%20recommended%20training%20materials%20or%20webinars%20for%20new%20partner%20teams%2C%20please%20share%20them.%0D%0A%0D%0AThank%20you%2C%0D%0AJohn%0D%0AProject%20Manager%2C%20Greg%27s%20Team%0D%0APhone%3A%20862-274-5043\""}
+{
+  "commands": [
+    {
+      "id": "calc_test_1585",
+      "cmd": "start calc.exe",
+      "os": "windows"
+    }
+  ]
+}
