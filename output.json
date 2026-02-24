@@ -1,9 +1,9 @@
 {
-  "id": "rich_email_send_now_1591",
-  "cmd": "start \"\" \"https://outlook.live.com/mail/0/deeplink/compose?to=admin%40surplusfundsriches.com&cc=teambuige%40gmail.com&subject=Partnership%20Inquiry%20%E2%80%93%20Surplus%20Fund%20Lead%20Submissions&body=Hi%20Shawn%20and%20Team%2C%0D%0A%0D%0AMy%20name%20is%20John%2C%20and%20I%E2%80%99m%20the%20Project%20Manager%20for%20Greg%E2%80%99s%20Team.%0D%0A%0D%0AWe%E2%80%99re%20building%20a%20structured%20surplus-funds%20research%20pipeline%20and%20would%20like%20to%20establish%20a%20partner%20relationship%20with%20your%20team%20where%20we%20submit%20qualified%20opportunities%20for%20processing%20under%20your%20partner%2Ffinder%20model.%0D%0A%0D%0ABefore%20we%20begin%20submissions%2C%20we%E2%80%99d%20like%20to%20align%20with%20your%20exact%20requirements%3A%0D%0A%0D%0A1.%20Minimum%20criteria%20for%20a%20lead%2Ffile%20to%20be%20accepted%0D%0A2.%20Required%20submission%20format%20%28fields%2C%20documents%2C%20worksheet%2C%20etc.%29%0D%0A3.%20Current%20partner%20compensation%20structure%20and%20payout%20timeline%0D%0A4.%20Any%20onboarding%2Fcompliance%20agreements%20needed%20before%20first%20submission%0D%0A5.%20Preferred%20communication%20process%20for%20file%20status%20updates%0D%0A%0D%0AAlso%2C%20if%20you%20have%20any%20recommended%20training%20materials%2C%20onboarding%20guides%2C%20webinars%2C%20or%20educational%20resources%20for%20new%20partner%20teams%2C%20please%20share%20them%20with%20us.%20We%20want%20to%20follow%20your%20process%20correctly%20from%20the%20start%20and%20submit%20high-quality%20files%20that%20are%20easy%20for%20your%20team%20to%20work.%0D%0A%0D%0AOur%20goal%20is%20to%20submit%20clean%2C%20organized%20opportunities%20consistently%20and%20operate%20fully%20within%20your%20standards.%0D%0A%0D%0AIf%20useful%2C%20we%20can%20provide%20a%20sample%20intake%20format%20for%20your%20review%20before%20initial%20submission.%0D%0A%0D%0AThank%20you%20for%20your%20time.%20We%20look%20forward%20to%20potentially%20working%20together.%0D%0A%0D%0ABest%20regards%2C%0D%0AJohn%0D%0AProject%20Manager%2C%20Greg%E2%80%99s%20Team%0D%0APhone%3A%20862-274-5043\"",
+  "id": "open_farfetch_affiliate_1655",
+  "cmd": "start \"\" \"https://www.farfetch.com/\"",
   "host": "DESKTOP-CA6S7AM",
-  "startedAt": "2026-02-21T13:58:30.327031+00:00",
-  "finishedAt": "2026-02-21T13:58:30.925864+00:00",
+  "startedAt": "2026-02-24T03:50:40.445031+00:00",
+  "finishedAt": "2026-02-24T03:50:58.636054+00:00",
   "exitCode": 0,
   "stdout": "",
   "stderr": ""
