@@ -1,1 +1,1 @@
-{"id":"digistore_tube_search_1675","cmd":"start \"\" \"https://www.digistore24.com/login/\" && start \"\" \"https://www.digistore24-app.com/en/marketplace\""}
+{"id":"tg_open_1661","cmd":"start \"\" telegram://"}
