@@ -1,1 +1,1 @@
-{"id":"tg_open_1661","cmd":"start \"\" telegram://"}
+{"id":"bridge_ping_live_1772153364","cmd":"cmd /c echo BRIDGE_LIVE_PING"}
