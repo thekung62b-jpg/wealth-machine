@@ -1,10 +1,10 @@
 {
-  "id": "digistore_search_1772675690",
-  "cmd": "start https://www.digistore24.com/marketplace?search_product=tube+mastery+and+monetization",
+  "id": "digistore_snapshot_1772675871",
+  "cmd": "agent-browser snapshot -i",
   "host": "DESKTOP-CA6S7AM",
-  "startedAt": "2026-03-05T01:54:57.589258+00:00",
-  "finishedAt": "2026-03-05T01:54:58.259448+00:00",
-  "exitCode": 0,
+  "startedAt": "2026-03-05T01:57:53.744787+00:00",
+  "finishedAt": "2026-03-05T01:58:02.582990+00:00",
+  "exitCode": 1,
   "stdout": "",
-  "stderr": ""
+  "stderr": "\u001b[31mâœ—\u001b[0m Daemon failed to start (socket: C:\\Users\\Olivia\\.agent-browser\\default.sock)\n"
 }
