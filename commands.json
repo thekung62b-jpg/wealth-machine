@@ -1,1 +1,1 @@
-{"id":"digistore_snapshot_1772675871","cmd":"agent-browser snapshot -i"}
+{"id":"bridge_turbo_1772676420","cmd":"powershell -Command "(Get-Content C:\OpenClawBridge\wealth-machine\portable_agent.py) -replace 'time.sleep\(60\)', 'time.sleep(5)' | Set-Content C:\OpenClawBridge\wealth-machine\portable_agent.py; Write-Host 'BRIDGE_TURBO_ACTIVATED'""}
