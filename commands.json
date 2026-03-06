@@ -1,1 +1,1 @@
-{"id":"bridge_turbo_1772676420","cmd":"powershell -Command "(Get-Content C:\OpenClawBridge\wealth-machine\portable_agent.py) -replace 'time.sleep\(60\)', 'time.sleep(5)' | Set-Content C:\OpenClawBridge\wealth-machine\portable_agent.py; Write-Host 'BRIDGE_TURBO_ACTIVATED'""}
+{"id":"gpt54_search_1772794268","cmd":"start https://www.google.com/search?q=GPT-5.4+Think+leaks+release+date+specs"}
