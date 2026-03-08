@@ -1,9 +1,9 @@
 {
-  "id": "monad_faucet_1772946089",
-  "cmd": "start https://testnet.monad.xyz/",
+  "id": "monad_alt_faucet_1772946846",
+  "cmd": "start https://faucet.quicknode.com/monad/testnet",
   "host": "DESKTOP-CA6S7AM",
-  "startedAt": "2026-03-08T05:01:36.111181+00:00",
-  "finishedAt": "2026-03-08T05:01:36.665835+00:00",
+  "startedAt": "2026-03-08T05:14:12.456512+00:00",
+  "finishedAt": "2026-03-08T05:14:13.053409+00:00",
   "exitCode": 0,
   "stdout": "",
   "stderr": ""
