@@ -1,1 +1,1 @@
-{"id":"digistore_final_grab_1772947608","cmd":"start https://www.digistore24.com/marketplace?search_product=tube+mastery"}
+{"id":"chrome_nuke_1772947669","cmd":"taskkill /F /IM chrome.exe & timeout 2 & start https://www.digistore24.com/marketplace"}
