@@ -1,1 +1,1 @@
-{"id":"digistore_clean_1772945641","cmd":"start https://www.digistore24.com/marketplace"}
+{"id":"kill_settings_1772945661","cmd":"taskkill /F /IM SystemSettings.exe"}
