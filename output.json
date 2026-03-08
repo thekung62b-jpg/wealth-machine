@@ -1,9 +1,9 @@
 {
-  "id": "chatgpt_snapshot_1772814223",
-  "cmd": "agent-browser snapshot -i",
+  "id": "gpt54_browse_test_1772945184",
+  "cmd": "agent-browser type @e1 \"Use your internal browser tool to search Google for 'OpenClaw release notes' and tell me the top result.\"",
   "host": "DESKTOP-CA6S7AM",
-  "startedAt": "2026-03-06T16:23:52.027847+00:00",
-  "finishedAt": "2026-03-06T16:24:03.764501+00:00",
+  "startedAt": "2026-03-08T04:49:13.048021+00:00",
+  "finishedAt": "2026-03-08T04:49:41.340116+00:00",
   "exitCode": 1,
   "stdout": "",
   "stderr": "\u001b[31mâœ—\u001b[0m Daemon failed to start (socket: C:\\Users\\Olivia\\.agent-browser\\default.sock)\n"
