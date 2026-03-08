@@ -1,10 +1,10 @@
 {
-  "id": "nuke_dialogs_1772945738",
-  "cmd": "taskkill /F /IM SystemSettings.exe & taskkill /F /IM WinStore.App.exe & taskkill /F /IM ApplicationFrameHost.exe & start https://www.digistore24.com/marketplace",
+  "id": "monad_faucet_1772946089",
+  "cmd": "start https://testnet.monad.xyz/",
   "host": "DESKTOP-CA6S7AM",
-  "startedAt": "2026-03-08T04:55:42.672993+00:00",
-  "finishedAt": "2026-03-08T04:55:43.628110+00:00",
+  "startedAt": "2026-03-08T05:01:36.111181+00:00",
+  "finishedAt": "2026-03-08T05:01:36.665835+00:00",
   "exitCode": 0,
-  "stdout": "SUCCESS: The process \"ApplicationFrameHost.exe\" with PID 10080 has been terminated.\n",
-  "stderr": "ERROR: The process \"SystemSettings.exe\" not found.\nERROR: The process \"WinStore.App.exe\" not found.\n"
+  "stdout": "",
+  "stderr": ""
 }
