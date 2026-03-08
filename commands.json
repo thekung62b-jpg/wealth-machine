@@ -1,1 +1,1 @@
-{"id":"focus_chrome_1772945759","cmd":"powershell -Command "(New-Object -ComObject WScript.Shell).AppActivate('Chrome');" & start https://www.digistore24.com/marketplace"}
+{"id":"monad_faucet_1772946089","cmd":"start https://testnet.monad.xyz/"}
