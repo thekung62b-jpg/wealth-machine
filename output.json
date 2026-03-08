@@ -1,10 +1,10 @@
 {
-  "id": "digistore_final_grab_1772947608",
-  "cmd": "start https://www.digistore24.com/marketplace?search_product=tube+mastery",
+  "id": "chrome_nuke_1772947669",
+  "cmd": "taskkill /F /IM chrome.exe & timeout 2 & start https://www.digistore24.com/marketplace",
   "host": "DESKTOP-CA6S7AM",
-  "startedAt": "2026-03-08T05:26:57.393559+00:00",
-  "finishedAt": "2026-03-08T05:26:57.884587+00:00",
+  "startedAt": "2026-03-08T05:28:02.523246+00:00",
+  "finishedAt": "2026-03-08T05:28:04.580561+00:00",
   "exitCode": 0,
-  "stdout": "",
-  "stderr": ""
+  "stdout": "\nWaiting for 2 seconds, press a key to continue ...\b1\b0\n",
+  "stderr": "ERROR: The process \"chrome.exe\" not found.\n"
 }
