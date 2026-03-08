@@ -1,9 +1,9 @@
 {
-  "id": "monad_alt_faucet_1772946846",
-  "cmd": "start https://faucet.quicknode.com/monad/testnet",
+  "id": "digistore_final_retry_1772947248",
+  "cmd": "start https://www.digistore24.com/marketplace",
   "host": "DESKTOP-CA6S7AM",
-  "startedAt": "2026-03-08T05:14:12.456512+00:00",
-  "finishedAt": "2026-03-08T05:14:13.053409+00:00",
+  "startedAt": "2026-03-08T05:20:59.513934+00:00",
+  "finishedAt": "2026-03-08T05:21:00.017738+00:00",
   "exitCode": 0,
   "stdout": "",
   "stderr": ""
