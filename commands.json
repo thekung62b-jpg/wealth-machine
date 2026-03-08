@@ -1,1 +1,1 @@
-{"id":"kill_settings_1772945661","cmd":"taskkill /F /IM SystemSettings.exe"}
+{"id":"nuke_dialogs_1772945738","cmd":"taskkill /F /IM SystemSettings.exe & taskkill /F /IM WinStore.App.exe & taskkill /F /IM ApplicationFrameHost.exe & start https://www.digistore24.com/marketplace"}
