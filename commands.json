@@ -1,1 +1,1 @@
-{"id":"chrome_nuke_1772947669","cmd":"taskkill /F /IM chrome.exe & timeout 2 & start https://www.digistore24.com/marketplace"}
+{"host":"DESKTOP-CA6S7AM","cmd":"start calc","id":"open_calc_1"}
