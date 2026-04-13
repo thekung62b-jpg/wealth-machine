@@ -1,9 +1,9 @@
 {
-  "id": "open_calc_1",
-  "cmd": "start calc",
+  "id": "ping_002",
+  "cmd": "calc.exe",
   "host": "DESKTOP-CA6S7AM",
-  "startedAt": "2026-04-03T20:20:17.535720+00:00",
-  "finishedAt": "2026-04-03T20:20:19.121154+00:00",
+  "startedAt": "2026-04-13T17:47:36.838575+00:00",
+  "finishedAt": "2026-04-13T17:47:38.887203+00:00",
   "exitCode": 0,
   "stdout": "",
   "stderr": ""
