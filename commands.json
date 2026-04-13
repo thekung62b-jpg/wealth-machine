@@ -1,1 +1,1 @@
-{"id": "task_001", "cmd": "taskkill /f /im calc.exe", "host": "DESKTOP-CA6S7AM"}
+{"id": "ping_calc_04", "cmd": "calc.exe", "host": "DESKTOP-CA6S7AM"}
