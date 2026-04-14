@@ -1,10 +1,12 @@
 #!/bin/bash
 cd ~/wealth-machine
+git config pull.rebase true
 while true; do
-    if [[ -n $(git status -s commands.json) ]]; then
-        git add commands.json
-        git commit -m "Auto-Mailer dispatch"
-        git push
+    if [[ -n $(git status -s) ]]; then
+        git add .
+        git commit -m "Cloud Write"
     fi
-    sleep 5
+    git pull origin master > /dev/null 2>&1
+    git push origin master > /dev/null 2>&1
+    sleep 3
 done
