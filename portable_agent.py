@@ -45,9 +45,12 @@ while True:
                     json.dump({"id": cmd_id, "result": result, "status": "done"}, f)
                 last_id = cmd_id
                 
-                # THE FIX: Package the mail (commit) BEFORE checking the mailbox (pull)
-                print("Pushing result back to Bridge...")
-                subprocess.run('git add . && git commit -m "Asus Result" && git pull origin master --no-rebase && git push origin master', shell=True)
+                # DIAGNOSTIC PUSH
+                print("Attempting to push...")
+                push_cmd = f'git add . && git commit -m "Result {cmd_id}" && git pull origin master --no-rebase && git push https://{TOKEN}@github.com/{REPO}.git master'
+                push_result = subprocess.run(push_cmd, shell=True, capture_output=True, text=True)
+                print(f"GIT STDOUT: {push_result.stdout}")
+                print(f"GIT STDERR: {push_result.stderr}")
 
         time.sleep(5)
     except Exception as e:
