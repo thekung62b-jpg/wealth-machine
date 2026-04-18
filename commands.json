@@ -1,1 +1,1 @@
-{"id": "vision_sweep_01", "cmd": "screenshot", "host": "DESKTOP-CA6S7AM"}
+{"id": "open_google_01", "cmd": "start https://www.google.com", "host": "DESKTOP-CA6S7AM"}
