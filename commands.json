@@ -1,1 +1,9 @@
-{"id": "vision_google_01", "cmd": "screenshot", "host": "DESKTOP-CA6S7AM"}
+{
+  "commands": [
+    {
+      "id": "cmd_test_shot_02",
+      "cmd": "screenshot",
+      "host": "DESKTOP-CA6S7AM"
+    }
+  ]
+}
