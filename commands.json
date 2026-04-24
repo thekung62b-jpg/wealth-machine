@@ -1,7 +1,7 @@
 {
   "commands": [
     {
-      "id": "cmd_d4bb4cda50",
+      "id": "cmd_e1625638fb",
       "cmd": "cmd /c start file:///C:/Users/Olivia/wealth-machine/bridge.html",
       "os": "windows",
       "host": "DESKTOP-CA6S7AM"
