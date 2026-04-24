@@ -1,1 +1,1 @@
-{"id": "cmd_test_shell_01", "status": "done", "host": "DESKTOP-CA6S7AM", "started_at": "2026-04-24T02:43:13.224739+00:00", "finished_at": "2026-04-24T02:43:13.259505+00:00", "result": "hello_from_bridge\n", "stdout": "hello_from_bridge\n", "stderr": "", "exit_code": 0}
+{"id": "cmd_d4bb4cda50", "status": "done", "host": "DESKTOP-CA6S7AM", "started_at": "2026-04-24T14:30:57.826952+00:00", "finished_at": "2026-04-24T14:30:59.282841+00:00", "result": "", "stdout": "", "stderr": "", "exit_code": 0}
