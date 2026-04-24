@@ -1,49 +1,137 @@
 import os, time, json, requests, subprocess, pyautogui, psutil
 from PIL import ImageGrab
 import sys
+from datetime import datetime, timezone
+from pathlib import Path
 
 # CONFIGURATION
 TOKEN = sys.argv[1] if len(sys.argv) > 1 else ""
 REPO = "thekung62b-jpg/wealth-machine"
 CMD_FILE = "commands.json"
-OUT_FILE = "output.json"
+BASE_DIR = Path(__file__).resolve().parent
+OUT_FILE = BASE_DIR / "output.json"
+STATE_FILE = BASE_DIR / ".openclaw_bridge_state.json"
+LAST_FRAME_FILE = BASE_DIR / "last_frame.png"
 GITHUB_API = f"https://api.github.com/repos/{REPO}/contents/{CMD_FILE}"
+session = requests.Session()
 
 print(f"--- V2 NEURAL LINK ACTIVE ---")
 print(f"LISTENING ON {os.getenv('COMPUTERNAME')}...")
 
-last_id = ""
+def load_executed_ids():
+    try:
+        with open(STATE_FILE, "r") as f:
+            payload = json.load(f)
+        ids = payload.get("executed_ids", [])
+        if isinstance(ids, list):
+            return set(str(item) for item in ids)
+    except FileNotFoundError:
+        return set()
+    except Exception:
+        return set()
+    return set()
+
+def save_executed_ids(executed_ids):
+    with open(STATE_FILE, "w") as f:
+        json.dump({"executed_ids": sorted(executed_ids)}, f)
+
+executed_ids = load_executed_ids()
+
+def extract_commands(payload):
+    if not isinstance(payload, dict):
+        return []
+
+    queued = payload.get("commands")
+    if isinstance(queued, list):
+        return [cmd for cmd in queued if isinstance(cmd, dict)]
+
+    # Backward compatibility for the legacy single-command shape.
+    if payload.get("id") and payload.get("cmd"):
+        return [payload]
+
+    return []
 
 def take_screenshot():
     ss = ImageGrab.grab()
-    ss.save("last_frame.png")
+    ss.save(LAST_FRAME_FILE)
     return "SCREENSHOT_SAVED"
+
+def iso_now():
+    return datetime.now(timezone.utc).isoformat()
+
+def write_result(cmd_id, status, started_at, result="", stdout="", stderr="", exit_code=None, artifact=""):
+    payload = {
+        "id": cmd_id,
+        "status": status,
+        "host": os.getenv("COMPUTERNAME"),
+        "started_at": started_at,
+        "finished_at": iso_now(),
+        "result": result,
+        "stdout": stdout,
+        "stderr": stderr,
+        "exit_code": exit_code,
+    }
+    if artifact:
+        payload["artifact"] = artifact
+
+    with open(OUT_FILE, "w") as f:
+        json.dump(payload, f)
 
 while True:
     try:
         headers = {"Authorization": f"token {TOKEN}", "Accept": "application/vnd.github.v3.raw"}
-        r = requests.get(GITHUB_API, headers=headers, timeout=10)
+        r = session.get(GITHUB_API, headers=headers, timeout=(10, 30))
         if r.status_code == 200:
-            data = r.json()
-            if data.get("id") != last_id:
-                cmd_id, action = data.get("id"), data.get("cmd")
-                print(f"EXECUTE[{cmd_id}]: {action}")
-                result = "Unknown Action"
-                
-                if action == "screenshot": result = take_screenshot()
-                elif action.startswith("click "):
-                    x, y = map(int, action.split(" ")[1].split(","))
-                    pyautogui.click(x, y); result = f"Clicked {x},{y}"
-                elif action.startswith("type "):
-                    pyautogui.write(action.replace("type ", ""), interval=0.1); result = "Typed"
-                else:
-                    proc = subprocess.run(action, shell=True, capture_output=True, text=True)
-                    result = proc.stdout if proc.stdout else proc.stderr
+            payload = r.json()
+            commands = extract_commands(payload)
+            for data in commands:
+                if data.get("id") in executed_ids:
+                    continue
 
-                # Write the local receipt
-                with open(OUT_FILE, "w") as f:
-                    json.dump({"id": cmd_id, "result": result, "status": "done"}, f)
-                last_id = cmd_id
+                target_host = data.get("host")
+                if target_host and target_host != os.getenv("COMPUTERNAME"):
+                    continue
+
+                target_os = data.get("os")
+                if target_os and target_os.lower() != "windows":
+                    continue
+
+                cmd_id, action = data.get("id"), data.get("cmd")
+                if not cmd_id or not action:
+                    continue
+
+                print(f"EXECUTE[{cmd_id}]: {action}")
+                started_at = iso_now()
+
+                try:
+                    if action == "screenshot":
+                        result = take_screenshot()
+                        write_result(cmd_id, "done", started_at, result=result, artifact=str(LAST_FRAME_FILE))
+                    elif action.startswith("click "):
+                        x, y = map(int, action.split(" ")[1].split(","))
+                        pyautogui.click(x, y)
+                        write_result(cmd_id, "done", started_at, result=f"Clicked {x},{y}")
+                    elif action.startswith("type "):
+                        pyautogui.write(action.replace("type ", ""), interval=0.1)
+                        write_result(cmd_id, "done", started_at, result="Typed")
+                    else:
+                        proc = subprocess.run(action, shell=True, capture_output=True, text=True)
+                        result = proc.stdout if proc.stdout else proc.stderr
+                        status = "done" if proc.returncode == 0 else "failed"
+                        write_result(
+                            cmd_id,
+                            status,
+                            started_at,
+                            result=result,
+                            stdout=proc.stdout,
+                            stderr=proc.stderr,
+                            exit_code=proc.returncode,
+                        )
+                except Exception as cmd_error:
+                    write_result(cmd_id, "failed", started_at, result=str(cmd_error), stderr=str(cmd_error))
+
+                executed_ids.add(cmd_id)
+                save_executed_ids(executed_ids)
                 
                 # DIAGNOSTIC PUSH
                 print("Attempting to push...")
