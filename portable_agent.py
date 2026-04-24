@@ -1,4 +1,4 @@
-import os, time, json, requests, subprocess, pyautogui, psutil
+import os, time, json, requests, subprocess, pyautogui, psutil, ctypes
 from PIL import ImageGrab
 import sys
 from datetime import datetime, timezone
@@ -56,6 +56,40 @@ def take_screenshot():
     ss.save(LAST_FRAME_FILE)
     return "SCREENSHOT_SAVED"
 
+def browser_probe():
+    if os.name != "nt":
+        raise RuntimeError("browser_probe is only supported on Windows")
+
+    user32 = ctypes.windll.user32
+    user32.GetForegroundWindow.restype = ctypes.c_void_p
+    user32.GetWindowThreadProcessId.argtypes = [ctypes.c_void_p, ctypes.POINTER(ctypes.c_ulong)]
+    user32.GetWindowTextLengthW.argtypes = [ctypes.c_void_p]
+    user32.GetWindowTextW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_int]
+
+    hwnd = user32.GetForegroundWindow()
+    pid = ctypes.c_ulong()
+    user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+
+    title_len = user32.GetWindowTextLengthW(hwnd)
+    title_buf = ctypes.create_unicode_buffer(max(title_len + 1, 512))
+    user32.GetWindowTextW(hwnd, title_buf, len(title_buf))
+
+    process_name = ""
+    process_id = int(pid.value)
+    if process_id:
+        try:
+            process_name = psutil.Process(process_id).name()
+        except psutil.Error:
+            process_name = ""
+
+    take_screenshot()
+    return {
+        "hwnd": int(hwnd or 0),
+        "process_id": process_id,
+        "process_name": process_name,
+        "title": title_buf.value,
+    }
+
 def iso_now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -107,6 +141,17 @@ while True:
                     if action == "screenshot":
                         result = take_screenshot()
                         write_result(cmd_id, "done", started_at, result=result, artifact=str(LAST_FRAME_FILE))
+                    elif action == "browser_probe":
+                        probe = browser_probe()
+                        write_result(
+                            cmd_id,
+                            "done",
+                            started_at,
+                            result=json.dumps(probe),
+                            stdout=json.dumps(probe),
+                            exit_code=0,
+                            artifact=str(LAST_FRAME_FILE),
+                        )
                     elif action.startswith("click "):
                         x, y = map(int, action.split(" ")[1].split(","))
                         pyautogui.click(x, y)
