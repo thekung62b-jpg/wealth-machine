@@ -1,7 +1,7 @@
 {
   "commands": [
     {
-      "id": "cmd_test_shot_02",
+      "id": "cmd_test_shot_03",
       "cmd": "screenshot",
       "host": "DESKTOP-CA6S7AM"
     }
