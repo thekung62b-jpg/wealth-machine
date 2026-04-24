@@ -1,8 +1,9 @@
 {
   "commands": [
     {
-      "id": "cmd_test_shell_01",
-      "cmd": "echo hello_from_bridge",
+      "id": "cmd_d4bb4cda50",
+      "cmd": "cmd /c start file:///C:/Users/Olivia/wealth-machine/bridge.html",
+      "os": "windows",
       "host": "DESKTOP-CA6S7AM"
     }
   ]
