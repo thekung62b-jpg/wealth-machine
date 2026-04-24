@@ -1,8 +1,8 @@
 {
   "commands": [
     {
-      "id": "cmd_test_shot_03",
-      "cmd": "screenshot",
+      "id": "cmd_test_shell_01",
+      "cmd": "echo hello_from_bridge",
       "host": "DESKTOP-CA6S7AM"
     }
   ]
