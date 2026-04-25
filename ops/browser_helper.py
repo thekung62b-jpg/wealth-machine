@@ -13,6 +13,9 @@ Action: active-window
 Action: notepad-safe-type-test
 - sets and reads the TEST 5 text in a UIA-discovered Notepad edit control
 
+Action: notepad-safe-click-test
+- places the cursor at the end of TEST 5 text and inserts the TEST 6 line
+
 No network, clicks, keystrokes, or browser automation.
 """
 
@@ -38,6 +41,8 @@ from PIL import ImageGrab
 ROOT = Path(__file__).resolve().parents[1]
 LAST_FRAME_FILE = ROOT / "last_frame.png"
 TEST5_TEXT = "LITTLE HOMIE CONTROL TEST PASS"
+TEST6_LINE = "CLICK TEST PASS"
+TEST6_TEXT = f"{TEST5_TEXT}\r\n{TEST6_LINE}"
 
 
 def iso_now() -> str:
@@ -135,9 +140,17 @@ def set_window_text(hwnd: int, text: str) -> int:
     return send_window_message(hwnd, 0x000C, 0, ctypes.c_wchar_p(text))
 
 
+def set_text_selection(hwnd: int, start: int, end: int) -> int:
+    return send_window_message(hwnd, 0x00B1, start, end)
+
+
+def replace_text_selection(hwnd: int, text: str) -> int:
+    return send_window_message(hwnd, 0x00C2, 1, ctypes.c_wchar_p(text))
+
+
 def get_window_text(hwnd: int) -> str:
     length = send_window_message(hwnd, 0x000E, 0, 0)
-    buffer = ctypes.create_unicode_buffer(max(length + 1, len(TEST5_TEXT) + 1))
+    buffer = ctypes.create_unicode_buffer(max(length + 1, len(TEST6_TEXT) + 1))
     send_window_message(hwnd, 0x000D, len(buffer), buffer)
     return buffer.value
 
@@ -294,12 +307,56 @@ def notepad_safe_type_test() -> dict[str, Any]:
     return payload
 
 
+def notepad_safe_click_test() -> dict[str, Any]:
+    try:
+        payload = run_powershell_json(notepad_uia_script())
+        if payload.get("ok"):
+            edit_hwnd = int(payload["edit_window_handle"])
+            set_result = set_window_text(edit_hwnd, TEST5_TEXT)
+            place_result = set_text_selection(edit_hwnd, len(TEST5_TEXT), len(TEST5_TEXT))
+            insert_result = replace_text_selection(edit_hwnd, f"\r\n{TEST6_LINE}")
+            readback = get_window_text(edit_hwnd)
+            exact = readback == TEST6_TEXT
+            payload.update(
+                {
+                    "ok": exact,
+                    "method": "uia-native-hwnd-em-setsel-replacesel",
+                    "initial_text_set": set_result == 1,
+                    "placement_action_executed": True,
+                    "placement_message_result": place_result,
+                    "insert_message_result": insert_result,
+                    "second_line_present": TEST6_LINE in readback,
+                    "readback_exact": exact,
+                    "expected_text": TEST6_TEXT,
+                    "readback": readback,
+                }
+            )
+    except Exception as exc:
+        payload = {
+            "ok": False,
+            "action": "notepad-safe-click-test",
+            "method": "uia-native-hwnd-em-setsel-replacesel",
+            "placement_action_executed": False,
+            "second_line_present": False,
+            "readback_exact": False,
+            "error": str(exc),
+        }
+
+    try:
+        screenshot = take_screenshot()
+    except Exception as exc:
+        screenshot = {"ok": False, "error": str(exc)}
+    payload["action"] = "notepad-safe-click-test"
+    payload["screenshot"] = screenshot
+    return payload
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Safe local browser helper")
     parser.add_argument(
         "action",
-        choices=["probe", "active-window", "notepad-safe-type-test"],
-        help="Supported actions: probe, active-window, notepad-safe-type-test",
+        choices=["probe", "active-window", "notepad-safe-type-test", "notepad-safe-click-test"],
+        help="Supported actions: probe, active-window, notepad-safe-type-test, notepad-safe-click-test",
     )
     args = parser.parse_args()
 
@@ -312,6 +369,9 @@ def main() -> int:
             return 0
         if args.action == "notepad-safe-type-test":
             print(json.dumps(notepad_safe_type_test(), separators=(",", ":")))
+            return 0
+        if args.action == "notepad-safe-click-test":
+            print(json.dumps(notepad_safe_click_test(), separators=(",", ":")))
             return 0
     except Exception as exc:
         payload = {
