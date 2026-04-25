@@ -19,7 +19,10 @@ Action: notepad-safe-click-test
 Action: notepad-safe-save-test
 - saves TEST 6 content from Notepad as control_test.txt and reads it back
 
-No network, clicks, keystrokes, or browser automation.
+Action: browser-example-click-test
+- clicks once inside the visible Example Domain page before invoking the link through UIA
+
+No keystrokes or credential automation.
 """
 
 from __future__ import annotations
@@ -48,6 +51,7 @@ TEST5_TEXT = "LITTLE HOMIE CONTROL TEST PASS"
 TEST6_LINE = "CLICK TEST PASS"
 TEST6_TEXT = f"{TEST5_TEXT}\r\n{TEST6_LINE}"
 CONTROL_TEST_FILE = ROOT / "control_test.txt"
+EXAMPLE_URL = "https://example.com"
 
 
 def iso_now() -> str:
@@ -101,6 +105,59 @@ def foreground_window() -> dict[str, Any]:
         "process_exe": process_exe,
         "title": title_buf.value,
     }
+
+
+def visible_windows() -> list[dict[str, Any]]:
+    if os.name != "nt":
+        raise RuntimeError("window enumeration is Windows-only")
+
+    class RECT(ctypes.Structure):
+        _fields_ = [
+            ("left", ctypes.c_long),
+            ("top", ctypes.c_long),
+            ("right", ctypes.c_long),
+            ("bottom", ctypes.c_long),
+        ]
+
+    user32 = ctypes.windll.user32
+    windows: list[dict[str, Any]] = []
+
+    @ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+    def enum_proc(hwnd: int, _lparam: int) -> bool:
+        if not user32.IsWindowVisible(hwnd):
+            return True
+        title_len = user32.GetWindowTextLengthW(hwnd)
+        title_buf = ctypes.create_unicode_buffer(max(title_len + 1, 512))
+        user32.GetWindowTextW(hwnd, title_buf, len(title_buf))
+        title = title_buf.value
+        if not title:
+            return True
+        rect = RECT()
+        if not user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(rect)):
+            return True
+        windows.append(
+            {
+                "hwnd": int(hwnd),
+                "title": title,
+                "left": int(rect.left),
+                "top": int(rect.top),
+                "right": int(rect.right),
+                "bottom": int(rect.bottom),
+            }
+        )
+        return True
+
+    user32.EnumWindows(enum_proc, 0)
+    return windows
+
+
+def click_screen_coordinate(x: int, y: int) -> None:
+    user32 = ctypes.windll.user32
+    user32.SetCursorPos(x, y)
+    time.sleep(0.1)
+    user32.mouse_event(0x0002, 0, 0, 0, 0)
+    time.sleep(0.05)
+    user32.mouse_event(0x0004, 0, 0, 0, 0)
 
 
 def run_powershell_json(script: str) -> dict[str, Any]:
@@ -262,6 +319,63 @@ def read_control_test_file() -> str:
         return data.decode("utf-8-sig")
     except UnicodeDecodeError:
         return data.decode("utf-16")
+
+
+def browser_example_link_script() -> str:
+    return """
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+
+$root = [System.Windows.Automation.AutomationElement]::RootElement
+$link = $null
+$all = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+for ($i = 0; $i -lt $all.Count; $i++) {
+  $item = $all.Item($i)
+  if ($item.Current.Name -like '*More information*') {
+    $link = $item
+    break
+  }
+}
+
+$clickExecuted = $false
+if ($null -ne $link) {
+  $pattern = $null
+  if ($link.TryGetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern, [ref]$pattern)) {
+    ([System.Windows.Automation.InvokePattern]$pattern).Invoke()
+    $clickExecuted = $true
+  }
+}
+
+Start-Sleep -Seconds 6
+$root = [System.Windows.Automation.AutomationElement]::RootElement
+$dest = $false
+$destEvidence = @()
+$after = $root.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+for ($i = 0; $i -lt $after.Count; $i++) {
+  $name = $after.Item($i).Current.Name
+  if ($name -like '*Example Domains*' -or $name -like '*iana.org/domains/example*' -or $name -like '*IANA-managed Reserved Domains*') {
+    $dest = $true
+    $destEvidence += $name
+    if ($destEvidence.Count -ge 5) {
+      break
+    }
+  }
+}
+
+[pscustomobject]@{
+  ok = $clickExecuted -and $dest
+  action = 'browser-example-click-test'
+  method = 'coordinate-page-activation-then-uia-link-invoke'
+  link_found = $null -ne $link
+  link_name = if ($null -ne $link) { $link.Current.Name } else { '' }
+  click_action_executed = $clickExecuted
+  browser_navigated_after_click = $dest
+  expected_destination_confirmed = $dest
+  destination_evidence = $destEvidence
+} | ConvertTo-Json -Compress -Depth 4
+"""
 
 
 def take_screenshot() -> dict[str, Any]:
@@ -435,6 +549,51 @@ def notepad_safe_save_test() -> dict[str, Any]:
     return payload
 
 
+def browser_example_click_test() -> dict[str, Any]:
+    activation_click: dict[str, Any] = {"executed": False}
+    try:
+        os.startfile(EXAMPLE_URL)
+        time.sleep(5)
+        example_window = next(
+            (window for window in visible_windows() if "Example Domain" in window["title"]),
+            None,
+        )
+        if example_window:
+            width = example_window["right"] - example_window["left"]
+            height = example_window["bottom"] - example_window["top"]
+            x = example_window["left"] + int(width * 0.82)
+            y = example_window["top"] + int(height * 0.28)
+            click_screen_coordinate(x, y)
+            activation_click = {
+                "executed": True,
+                "x": x,
+                "y": y,
+                "window": example_window,
+            }
+            time.sleep(1)
+
+        payload = run_powershell_json(browser_example_link_script())
+        payload["page_activation_click"] = activation_click
+    except Exception as exc:
+        payload = {
+            "ok": False,
+            "action": "browser-example-click-test",
+            "method": "coordinate-page-activation-then-uia-link-invoke",
+            "click_action_executed": False,
+            "browser_navigated_after_click": False,
+            "expected_destination_confirmed": False,
+            "page_activation_click": activation_click,
+            "error": str(exc),
+        }
+
+    try:
+        screenshot = take_screenshot()
+    except Exception as exc:
+        screenshot = {"ok": False, "error": str(exc)}
+    payload["screenshot"] = screenshot
+    return payload
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Safe local browser helper")
     parser.add_argument(
@@ -445,8 +604,9 @@ def main() -> int:
             "notepad-safe-type-test",
             "notepad-safe-click-test",
             "notepad-safe-save-test",
+            "browser-example-click-test",
         ],
-        help="Supported actions: probe, active-window, notepad-safe-type-test, notepad-safe-click-test, notepad-safe-save-test",
+        help="Supported actions: probe, active-window, notepad-safe-type-test, notepad-safe-click-test, notepad-safe-save-test, browser-example-click-test",
     )
     args = parser.parse_args()
 
@@ -465,6 +625,9 @@ def main() -> int:
             return 0
         if args.action == "notepad-safe-save-test":
             print(json.dumps(notepad_safe_save_test(), separators=(",", ":")))
+            return 0
+        if args.action == "browser-example-click-test":
+            print(json.dumps(browser_example_click_test(), separators=(",", ":")))
             return 0
     except Exception as exc:
         payload = {
