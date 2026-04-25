@@ -443,8 +443,9 @@ for ($i = 0; $i -lt $all.Count; $i++) {
   $item = $all.Item($i)
   $name = $item.Current.Name
   if ($name -like '*More*') {
+    $safeName = $name -replace '[\x00-\x1F]', ''
     $matches += [pscustomobject]@{
-      name = $name
+      name = $safeName
       class = $item.Current.ClassName
       control_type = $item.Current.ControlType.ProgrammaticName
       hwnd = $item.Current.NativeWindowHandle
