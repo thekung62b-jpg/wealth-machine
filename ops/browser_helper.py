@@ -438,18 +438,14 @@ Add-Type -AssemblyName UIAutomationTypes
 
 $window = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]__HWND__)
 $all = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
-$matches = @()
+$containsMore = $false
+$moreMatchCount = 0
 for ($i = 0; $i -lt $all.Count; $i++) {
   $item = $all.Item($i)
   $name = $item.Current.Name
   if ($name -like '*More*') {
-    $safeName = $name -replace '[\x00-\x1F]', ''
-    $matches += [pscustomobject]@{
-      name = $safeName
-      class = $item.Current.ClassName
-      control_type = $item.Current.ControlType.ProgrammaticName
-      hwnd = $item.Current.NativeWindowHandle
-    }
+    $containsMore = $true
+    $moreMatchCount += 1
   }
 }
 
@@ -459,8 +455,9 @@ for ($i = 0; $i -lt $all.Count; $i++) {
   method = 'enumwindows-edge-hwnd-uia-descendant-name-dump'
   edge_window_found = $true
   scanned_descendants = $all.Count
-  contains_more_name = $matches.Count -gt 0
-  more_matches = $matches
+  contains_more_name = $containsMore
+  more_match_count = $moreMatchCount
+  more_matches = @()
 } | ConvertTo-Json -Compress -Depth 4
 """.replace("__HWND__", str(hwnd))
 
