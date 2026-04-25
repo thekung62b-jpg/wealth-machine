@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-One-action local browser helper for the proven shell-command bridge path.
+Local browser/app helper for the proven shell-command bridge path.
 
 Action: probe
 - reads the current foreground window title/process
@@ -10,7 +10,10 @@ Action: probe
 Action: active-window
 - reads the current foreground window title/process
 
-No network, clicks, typing, or browser automation.
+Action: notepad-safe-type-test
+- types the TEST 5 text only after foreground Notepad verification
+
+No network, clicks, or browser automation.
 """
 
 from __future__ import annotations
@@ -21,17 +24,21 @@ import hashlib
 import json
 import os
 import platform
+import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import pyautogui
 import psutil
 from PIL import ImageGrab
 
 
 ROOT = Path(__file__).resolve().parents[1]
 LAST_FRAME_FILE = ROOT / "last_frame.png"
+TEST5_TEXT = "LITTLE HOMIE CONTROL TEST PASS"
 
 
 def iso_now() -> str:
@@ -87,6 +94,37 @@ def foreground_window() -> dict[str, Any]:
     }
 
 
+def enum_windows_for_pid(process_id: int) -> list[int]:
+    if os.name != "nt":
+        raise RuntimeError("window enumeration is Windows-only")
+
+    user32 = ctypes.windll.user32
+    windows: list[int] = []
+
+    @ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
+    def enum_proc(hwnd: int, _lparam: int) -> bool:
+        pid = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        if int(pid.value) == process_id and user32.IsWindowVisible(hwnd):
+            windows.append(int(hwnd))
+        return True
+
+    user32.EnumWindows(enum_proc, 0)
+    return windows
+
+
+def activate_window(hwnd: int) -> None:
+    user32 = ctypes.windll.user32
+    user32.ShowWindow(ctypes.c_void_p(hwnd), 5)
+    user32.SetForegroundWindow(ctypes.c_void_p(hwnd))
+
+
+def is_notepad_foreground(foreground: dict[str, Any]) -> bool:
+    process_name = str(foreground.get("process_name", "")).lower()
+    title = str(foreground.get("title", "")).lower()
+    return process_name == "notepad.exe" or "notepad" in title
+
+
 def take_screenshot() -> dict[str, Any]:
     image = ImageGrab.grab()
     image.save(LAST_FRAME_FILE)
@@ -123,12 +161,49 @@ def active_window() -> dict[str, Any]:
     }
 
 
+def notepad_safe_type_test() -> dict[str, Any]:
+    proc = subprocess.Popen(["notepad.exe"])
+    hwnd = 0
+    for _ in range(40):
+        windows = enum_windows_for_pid(proc.pid)
+        if windows:
+            hwnd = windows[0]
+            activate_window(hwnd)
+            break
+        time.sleep(0.2)
+
+    time.sleep(0.3)
+    foreground = foreground_window()
+    if not is_notepad_foreground(foreground):
+        screenshot = take_screenshot()
+        return {
+            "ok": False,
+            "action": "notepad-safe-type-test",
+            "typed": False,
+            "reason": "foreground window is not Notepad",
+            "foreground": foreground,
+            "screenshot": screenshot,
+        }
+
+    pyautogui.write(TEST5_TEXT, interval=0.03)
+    time.sleep(0.5)
+    screenshot = take_screenshot()
+    return {
+        "ok": True,
+        "action": "notepad-safe-type-test",
+        "typed": True,
+        "typed_text": TEST5_TEXT,
+        "foreground_before_typing": foreground,
+        "screenshot": screenshot,
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Safe local browser helper")
     parser.add_argument(
         "action",
-        choices=["probe", "active-window"],
-        help="Supported actions: probe, active-window",
+        choices=["probe", "active-window", "notepad-safe-type-test"],
+        help="Supported actions: probe, active-window, notepad-safe-type-test",
     )
     args = parser.parse_args()
 
@@ -138,6 +213,9 @@ def main() -> int:
             return 0
         if args.action == "active-window":
             print(json.dumps(active_window(), separators=(",", ":")))
+            return 0
+        if args.action == "notepad-safe-type-test":
+            print(json.dumps(notepad_safe_type_test(), separators=(",", ":")))
             return 0
     except Exception as exc:
         payload = {
