@@ -1,8 +1,8 @@
 {
   "commands": [
     {
-      "id": "cmd_47bf578cb6",
-      "cmd": "browser_probe",
+      "id": "cmd_test2_shell_retry_01",
+      "cmd": "echo TEST2_OK",
       "os": "windows",
       "host": "DESKTOP-CA6S7AM"
     }
