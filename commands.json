@@ -1,8 +1,14 @@
 {
   "commands": [
     {
-      "id": "cmd_test2_shell_retry_01",
-      "cmd": "echo TEST2_OK",
+      "id": "cmd_test3_notepad_20260424232705",
+      "cmd": "cmd /c start notepad.exe",
+      "os": "windows",
+      "host": "DESKTOP-CA6S7AM"
+    },
+    {
+      "id": "cmd_test3_screenshot_20260424232705",
+      "cmd": "screenshot",
       "os": "windows",
       "host": "DESKTOP-CA6S7AM"
     }
