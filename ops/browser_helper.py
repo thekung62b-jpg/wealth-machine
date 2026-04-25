@@ -123,6 +123,11 @@ def visible_windows() -> list[dict[str, Any]]:
         ]
 
     user32 = ctypes.windll.user32
+    user32.GetClassNameW.argtypes = [ctypes.c_void_p, ctypes.c_wchar_p, ctypes.c_int]
+    user32.GetWindowThreadProcessId.argtypes = [
+        ctypes.c_void_p,
+        ctypes.POINTER(ctypes.c_ulong),
+    ]
     windows: list[dict[str, Any]] = []
 
     @ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
@@ -142,6 +147,9 @@ def visible_windows() -> list[dict[str, Any]]:
             {
                 "hwnd": int(hwnd),
                 "title": title,
+                "class_name": "",
+                "process_id": 0,
+                "process_name": "",
                 "left": int(rect.left),
                 "top": int(rect.top),
                 "right": int(rect.right),
@@ -151,7 +159,47 @@ def visible_windows() -> list[dict[str, Any]]:
         return True
 
     user32.EnumWindows(enum_proc, 0)
+    for window in windows:
+        hwnd = ctypes.c_void_p(int(window["hwnd"]))
+        class_buf = ctypes.create_unicode_buffer(512)
+        user32.GetClassNameW(hwnd, class_buf, len(class_buf))
+        pid = ctypes.c_ulong()
+        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+        process_id = int(pid.value)
+        process_name = ""
+        if process_id:
+            try:
+                process_name = psutil.Process(process_id).name()
+            except psutil.Error:
+                process_name = ""
+        window.update(
+            {
+                "class_name": class_buf.value,
+                "process_id": process_id,
+                "process_name": process_name,
+            }
+        )
     return windows
+
+
+def find_edge_window() -> tuple[dict[str, Any] | None, list[dict[str, Any]]]:
+    windows = visible_windows()
+    edge_windows = [
+        window
+        for window in windows
+        if str(window.get("process_name", "")).lower() == "msedge.exe"
+    ]
+    preferred_terms = ("Example Domain", "Microsoft Edge", "Edge")
+    preferred = [
+        window
+        for window in edge_windows
+        if any(term in str(window.get("title", "")) for term in preferred_terms)
+    ]
+    if preferred:
+        return preferred[0], windows
+    if edge_windows:
+        return edge_windows[0], windows
+    return None, windows
 
 
 def click_screen_coordinate(x: int, y: int) -> None:
@@ -381,32 +429,14 @@ for ($i = 0; $i -lt $after.Count; $i++) {
 """
 
 
-def browser_example_uia_dump_script() -> str:
+def browser_example_uia_dump_script(hwnd: int) -> str:
     return """
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 
-$edge = Get-Process msedge -ErrorAction SilentlyContinue |
-  Where-Object { $_.MainWindowHandle -ne 0 } |
-  Sort-Object @{Expression = { $_.MainWindowTitle -like '*Example Domain*' }; Descending = $true}, StartTime -Descending |
-  Select-Object -First 1
-
-if ($null -eq $edge) {
-  [pscustomobject]@{
-    ok = $false
-    action = 'browser-example-uia-dump'
-    method = 'active-edge-window-uia-descendant-name-dump'
-    edge_window_found = $false
-    scanned_descendants = 0
-    contains_more_name = $false
-    more_matches = @()
-  } | ConvertTo-Json -Compress -Depth 4
-  exit 0
-}
-
-$window = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$edge.MainWindowHandle)
+$window = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]__HWND__)
 $all = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
 $matches = @()
 for ($i = 0; $i -lt $all.Count; $i++) {
@@ -425,15 +455,13 @@ for ($i = 0; $i -lt $all.Count; $i++) {
 [pscustomobject]@{
   ok = $true
   action = 'browser-example-uia-dump'
-  method = 'active-edge-window-uia-descendant-name-dump'
+  method = 'enumwindows-edge-hwnd-uia-descendant-name-dump'
   edge_window_found = $true
-  edge_process_id = $edge.Id
-  edge_title = $edge.MainWindowTitle
   scanned_descendants = $all.Count
   contains_more_name = $matches.Count -gt 0
   more_matches = $matches
 } | ConvertTo-Json -Compress -Depth 4
-"""
+""".replace("__HWND__", str(hwnd))
 
 
 def take_screenshot() -> dict[str, Any]:
@@ -653,14 +681,46 @@ def browser_example_click_test() -> dict[str, Any]:
 
 
 def browser_example_uia_dump() -> dict[str, Any]:
+    edge_window: dict[str, Any] | None = None
+    scanned_top_level_windows = 0
     try:
-        payload = run_powershell_json(browser_example_uia_dump_script())
+        edge_window, windows = find_edge_window()
+        scanned_top_level_windows = len(windows)
+        if edge_window is None:
+            payload = {
+                "ok": False,
+                "action": "browser-example-uia-dump",
+                "method": "enumwindows-edge-hwnd-uia-descendant-name-dump",
+                "edge_window_found": False,
+                "matched_title": "",
+                "matched_class": "",
+                "matched_process": "",
+                "scanned_top_level_windows": scanned_top_level_windows,
+                "scanned_descendants": 0,
+                "contains_more_name": False,
+                "more_matches": [],
+            }
+        else:
+            payload = run_powershell_json(browser_example_uia_dump_script(int(edge_window["hwnd"])))
+            payload.update(
+                {
+                    "matched_title": edge_window.get("title", ""),
+                    "matched_class": edge_window.get("class_name", ""),
+                    "matched_process": edge_window.get("process_name", ""),
+                    "matched_hwnd": edge_window.get("hwnd", 0),
+                    "scanned_top_level_windows": scanned_top_level_windows,
+                }
+            )
     except Exception as exc:
         payload = {
             "ok": False,
             "action": "browser-example-uia-dump",
-            "method": "active-edge-window-uia-descendant-name-dump",
+            "method": "enumwindows-edge-hwnd-uia-descendant-name-dump",
             "edge_window_found": False,
+            "matched_title": edge_window.get("title", "") if edge_window else "",
+            "matched_class": edge_window.get("class_name", "") if edge_window else "",
+            "matched_process": edge_window.get("process_name", "") if edge_window else "",
+            "scanned_top_level_windows": scanned_top_level_windows,
             "scanned_descendants": 0,
             "contains_more_name": False,
             "more_matches": [],
