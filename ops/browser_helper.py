@@ -7,6 +7,9 @@ Action: probe
 - saves a fresh screenshot to last_frame.png
 - prints compact JSON to stdout for portable_agent.py to capture in output.json
 
+Action: active-window
+- reads the current foreground window title/process
+
 No network, clicks, typing, or browser automation.
 """
 
@@ -110,14 +113,31 @@ def probe() -> dict[str, Any]:
     }
 
 
+def active_window() -> dict[str, Any]:
+    return {
+        "ok": True,
+        "action": "active-window",
+        "host": os.getenv("COMPUTERNAME") or platform.node(),
+        "timestamp": iso_now(),
+        "foreground": foreground_window(),
+    }
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Safe local browser helper")
-    parser.add_argument("action", choices=["probe"], help="Only supported action: probe")
+    parser.add_argument(
+        "action",
+        choices=["probe", "active-window"],
+        help="Supported actions: probe, active-window",
+    )
     args = parser.parse_args()
 
     try:
         if args.action == "probe":
             print(json.dumps(probe(), separators=(",", ":")))
+            return 0
+        if args.action == "active-window":
+            print(json.dumps(active_window(), separators=(",", ":")))
             return 0
     except Exception as exc:
         payload = {
