@@ -1,14 +1,8 @@
 {
   "commands": [
     {
-      "id": "cmd_test3_notepad_20260424232705",
-      "cmd": "cmd /c start notepad.exe",
-      "os": "windows",
-      "host": "DESKTOP-CA6S7AM"
-    },
-    {
-      "id": "cmd_test3_screenshot_20260424232705",
-      "cmd": "screenshot",
+      "id": "cmd_test4_app_target_20260424233145",
+      "cmd": "python .\\ops\\browser_helper.py probe",
       "os": "windows",
       "host": "DESKTOP-CA6S7AM"
     }
