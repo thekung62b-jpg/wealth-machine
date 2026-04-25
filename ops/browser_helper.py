@@ -119,6 +119,28 @@ def activate_window(hwnd: int) -> None:
     user32.SetForegroundWindow(ctypes.c_void_p(hwnd))
 
 
+def click_inside_window(hwnd: int) -> dict[str, int]:
+    class RECT(ctypes.Structure):
+        _fields_ = [
+            ("left", ctypes.c_long),
+            ("top", ctypes.c_long),
+            ("right", ctypes.c_long),
+            ("bottom", ctypes.c_long),
+        ]
+
+    user32 = ctypes.windll.user32
+    rect = RECT()
+    if not user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(rect)):
+        raise RuntimeError("failed to read Notepad window bounds")
+
+    width = rect.right - rect.left
+    height = rect.bottom - rect.top
+    x = rect.left + min(120, max(10, width - 10))
+    y = rect.top + min(120, max(10, height - 10))
+    pyautogui.click(x, y)
+    return {"x": x, "y": y}
+
+
 def is_notepad_foreground(foreground: dict[str, Any]) -> bool:
     process_name = str(foreground.get("process_name", "")).lower()
     title = str(foreground.get("title", "")).lower()
@@ -164,11 +186,13 @@ def active_window() -> dict[str, Any]:
 def notepad_safe_type_test() -> dict[str, Any]:
     proc = subprocess.Popen(["notepad.exe"])
     hwnd = 0
+    focus_click: dict[str, int] = {}
     for _ in range(40):
         windows = enum_windows_for_pid(proc.pid)
         if windows:
             hwnd = windows[0]
             activate_window(hwnd)
+            focus_click = click_inside_window(hwnd)
             break
         time.sleep(0.2)
 
@@ -182,6 +206,7 @@ def notepad_safe_type_test() -> dict[str, Any]:
             "typed": False,
             "reason": "foreground window is not Notepad",
             "foreground": foreground,
+            "focus_click": focus_click,
             "screenshot": screenshot,
         }
 
@@ -194,6 +219,7 @@ def notepad_safe_type_test() -> dict[str, Any]:
         "typed": True,
         "typed_text": TEST5_TEXT,
         "foreground_before_typing": foreground,
+        "focus_click": focus_click,
         "screenshot": screenshot,
     }
 
