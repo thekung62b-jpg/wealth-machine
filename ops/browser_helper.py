@@ -22,6 +22,9 @@ Action: notepad-safe-save-test
 Action: browser-example-click-test
 - clicks once inside the visible Example Domain page before invoking the link through UIA
 
+Action: browser-example-uia-dump
+- dumps UIA descendants from the Example Domain Edge window whose names contain More
+
 No keystrokes or credential automation.
 """
 
@@ -378,6 +381,61 @@ for ($i = 0; $i -lt $after.Count; $i++) {
 """
 
 
+def browser_example_uia_dump_script() -> str:
+    return """
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+
+$edge = Get-Process msedge -ErrorAction SilentlyContinue |
+  Where-Object { $_.MainWindowHandle -ne 0 } |
+  Sort-Object @{Expression = { $_.MainWindowTitle -like '*Example Domain*' }; Descending = $true}, StartTime -Descending |
+  Select-Object -First 1
+
+if ($null -eq $edge) {
+  [pscustomobject]@{
+    ok = $false
+    action = 'browser-example-uia-dump'
+    method = 'active-edge-window-uia-descendant-name-dump'
+    edge_window_found = $false
+    scanned_descendants = 0
+    contains_more_name = $false
+    more_matches = @()
+  } | ConvertTo-Json -Compress -Depth 4
+  exit 0
+}
+
+$window = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$edge.MainWindowHandle)
+$all = $window.FindAll([System.Windows.Automation.TreeScope]::Descendants, [System.Windows.Automation.Condition]::TrueCondition)
+$matches = @()
+for ($i = 0; $i -lt $all.Count; $i++) {
+  $item = $all.Item($i)
+  $name = $item.Current.Name
+  if ($name -like '*More*') {
+    $matches += [pscustomobject]@{
+      name = $name
+      class = $item.Current.ClassName
+      control_type = $item.Current.ControlType.ProgrammaticName
+      hwnd = $item.Current.NativeWindowHandle
+    }
+  }
+}
+
+[pscustomobject]@{
+  ok = $true
+  action = 'browser-example-uia-dump'
+  method = 'active-edge-window-uia-descendant-name-dump'
+  edge_window_found = $true
+  edge_process_id = $edge.Id
+  edge_title = $edge.MainWindowTitle
+  scanned_descendants = $all.Count
+  contains_more_name = $matches.Count -gt 0
+  more_matches = $matches
+} | ConvertTo-Json -Compress -Depth 4
+"""
+
+
 def take_screenshot() -> dict[str, Any]:
     image = ImageGrab.grab()
     image.save(LAST_FRAME_FILE)
@@ -594,6 +652,29 @@ def browser_example_click_test() -> dict[str, Any]:
     return payload
 
 
+def browser_example_uia_dump() -> dict[str, Any]:
+    try:
+        payload = run_powershell_json(browser_example_uia_dump_script())
+    except Exception as exc:
+        payload = {
+            "ok": False,
+            "action": "browser-example-uia-dump",
+            "method": "active-edge-window-uia-descendant-name-dump",
+            "edge_window_found": False,
+            "scanned_descendants": 0,
+            "contains_more_name": False,
+            "more_matches": [],
+            "error": str(exc),
+        }
+
+    try:
+        screenshot = take_screenshot()
+    except Exception as exc:
+        screenshot = {"ok": False, "error": str(exc)}
+    payload["screenshot"] = screenshot
+    return payload
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Safe local browser helper")
     parser.add_argument(
@@ -605,8 +686,9 @@ def main() -> int:
             "notepad-safe-click-test",
             "notepad-safe-save-test",
             "browser-example-click-test",
+            "browser-example-uia-dump",
         ],
-        help="Supported actions: probe, active-window, notepad-safe-type-test, notepad-safe-click-test, notepad-safe-save-test, browser-example-click-test",
+        help="Supported actions: probe, active-window, notepad-safe-type-test, notepad-safe-click-test, notepad-safe-save-test, browser-example-click-test, browser-example-uia-dump",
     )
     args = parser.parse_args()
 
@@ -628,6 +710,9 @@ def main() -> int:
             return 0
         if args.action == "browser-example-click-test":
             print(json.dumps(browser_example_click_test(), separators=(",", ":")))
+            return 0
+        if args.action == "browser-example-uia-dump":
+            print(json.dumps(browser_example_uia_dump(), separators=(",", ":")))
             return 0
     except Exception as exc:
         payload = {
