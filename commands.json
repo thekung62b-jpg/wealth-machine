@@ -1,8 +1,8 @@
 {
   "commands": [
     {
-      "id": "cmd_test10_browser_click_retry_04",
-      "cmd": "python .\\ops\\browser_helper.py browser-example-click-test",
+      "id": "cmd_test10_uia_dump_01",
+      "cmd": "python .\\ops\\browser_helper.py browser-example-uia-dump",
       "os": "windows",
       "host": "DESKTOP-CA6S7AM"
     }
