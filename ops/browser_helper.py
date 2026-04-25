@@ -16,6 +16,9 @@ Action: notepad-safe-type-test
 Action: notepad-safe-click-test
 - places the cursor at the end of TEST 5 text and inserts the TEST 6 line
 
+Action: notepad-safe-save-test
+- saves TEST 6 content from Notepad as control_test.txt and reads it back
+
 No network, clicks, keystrokes, or browser automation.
 """
 
@@ -30,6 +33,7 @@ import os
 import platform
 import subprocess
 import sys
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -43,6 +47,7 @@ LAST_FRAME_FILE = ROOT / "last_frame.png"
 TEST5_TEXT = "LITTLE HOMIE CONTROL TEST PASS"
 TEST6_LINE = "CLICK TEST PASS"
 TEST6_TEXT = f"{TEST5_TEXT}\r\n{TEST6_LINE}"
+CONTROL_TEST_FILE = ROOT / "control_test.txt"
 
 
 def iso_now() -> str:
@@ -136,6 +141,13 @@ def send_window_message(hwnd: int, message: int, wparam: int, lparam: Any) -> in
     return int(user32.SendMessageW(ctypes.c_void_p(hwnd), message, wparam, lparam))
 
 
+def send_window_message_int(hwnd: int, message: int, wparam: int, lparam: int) -> int:
+    user32 = ctypes.windll.user32
+    user32.SendMessageW.argtypes = None
+    user32.SendMessageW.restype = ctypes.c_ssize_t
+    return int(user32.SendMessageW(ctypes.c_void_p(hwnd), message, wparam, lparam))
+
+
 def set_window_text(hwnd: int, text: str) -> int:
     return send_window_message(hwnd, 0x000C, 0, ctypes.c_wchar_p(text))
 
@@ -148,6 +160,10 @@ def replace_text_selection(hwnd: int, text: str) -> int:
     return send_window_message(hwnd, 0x00C2, 1, ctypes.c_wchar_p(text))
 
 
+def save_notepad_window(hwnd: int) -> int:
+    return send_window_message_int(hwnd, 0x0111, 3, 0)
+
+
 def get_window_text(hwnd: int) -> str:
     length = send_window_message(hwnd, 0x000E, 0, 0)
     buffer = ctypes.create_unicode_buffer(max(length + 1, len(TEST6_TEXT) + 1))
@@ -155,14 +171,20 @@ def get_window_text(hwnd: int) -> str:
     return buffer.value
 
 
-def notepad_uia_script() -> str:
+def notepad_uia_script(file_path: Path | None = None) -> str:
+    if file_path is None:
+        start_process = "$proc = Start-Process notepad.exe -PassThru"
+    else:
+        escaped_path = str(file_path).replace("'", "''")
+        start_process = f"$proc = Start-Process notepad.exe -ArgumentList '{escaped_path}' -PassThru"
+
     return """
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 Add-Type -AssemblyName UIAutomationClient
 Add-Type -AssemblyName UIAutomationTypes
 
-$proc = Start-Process notepad.exe -PassThru
+__START_PROCESS__
 $window = $null
 for ($i = 0; $i -lt 80; $i++) {
   $proc.Refresh()
@@ -231,7 +253,15 @@ if ($null -eq $target) {
   control_class = $target.Current.ClassName
   control_type = $target.Current.ControlType.ProgrammaticName
 } | ConvertTo-Json -Compress
-"""
+""".replace("__START_PROCESS__", start_process)
+
+
+def read_control_test_file() -> str:
+    data = CONTROL_TEST_FILE.read_bytes()
+    try:
+        return data.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return data.decode("utf-16")
 
 
 def take_screenshot() -> dict[str, Any]:
@@ -351,12 +381,72 @@ def notepad_safe_click_test() -> dict[str, Any]:
     return payload
 
 
+def notepad_safe_save_test() -> dict[str, Any]:
+    expected = TEST6_TEXT
+    try:
+        CONTROL_TEST_FILE.write_text("", encoding="utf-8")
+        payload = run_powershell_json(notepad_uia_script(CONTROL_TEST_FILE))
+        if payload.get("ok"):
+            main_hwnd = int(payload["main_window_handle"])
+            edit_hwnd = int(payload["edit_window_handle"])
+            set_result = set_window_text(edit_hwnd, expected)
+            save_result = save_notepad_window(main_hwnd)
+            readback = ""
+            read_success = False
+            for _ in range(20):
+                readback = read_control_test_file()
+                read_success = True
+                if readback == expected:
+                    break
+                time.sleep(0.1)
+
+            exact = read_success and readback == expected
+            payload.update(
+                {
+                    "ok": exact,
+                    "action": "notepad-safe-save-test",
+                    "method": "uia-native-hwnd-wm-settext-wm-command-save",
+                    "file_path": str(CONTROL_TEST_FILE),
+                    "notepad_text_set": set_result == 1,
+                    "save_command_result": save_result,
+                    "file_saved_successfully": CONTROL_TEST_FILE.exists() and CONTROL_TEST_FILE.stat().st_size > 0,
+                    "shell_readback_succeeded": read_success,
+                    "readback_exact": exact,
+                    "expected_text": expected,
+                    "readback": readback,
+                }
+            )
+    except Exception as exc:
+        payload = {
+            "ok": False,
+            "action": "notepad-safe-save-test",
+            "method": "uia-native-hwnd-wm-settext-wm-command-save",
+            "file_saved_successfully": False,
+            "shell_readback_succeeded": False,
+            "readback_exact": False,
+            "error": str(exc),
+        }
+
+    try:
+        screenshot = take_screenshot()
+    except Exception as exc:
+        screenshot = {"ok": False, "error": str(exc)}
+    payload["screenshot"] = screenshot
+    return payload
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Safe local browser helper")
     parser.add_argument(
         "action",
-        choices=["probe", "active-window", "notepad-safe-type-test", "notepad-safe-click-test"],
-        help="Supported actions: probe, active-window, notepad-safe-type-test, notepad-safe-click-test",
+        choices=[
+            "probe",
+            "active-window",
+            "notepad-safe-type-test",
+            "notepad-safe-click-test",
+            "notepad-safe-save-test",
+        ],
+        help="Supported actions: probe, active-window, notepad-safe-type-test, notepad-safe-click-test, notepad-safe-save-test",
     )
     args = parser.parse_args()
 
@@ -372,6 +462,9 @@ def main() -> int:
             return 0
         if args.action == "notepad-safe-click-test":
             print(json.dumps(notepad_safe_click_test(), separators=(",", ":")))
+            return 0
+        if args.action == "notepad-safe-save-test":
+            print(json.dumps(notepad_safe_save_test(), separators=(",", ":")))
             return 0
     except Exception as exc:
         payload = {
