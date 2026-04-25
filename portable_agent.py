@@ -133,6 +133,9 @@ while True:
                 cmd_id, action = data.get("id"), data.get("cmd")
                 if not cmd_id or not action:
                     continue
+                action = str(action).strip()
+                if not action:
+                    continue
 
                 print(f"EXECUTE[{cmd_id}]: {action}")
                 started_at = iso_now()
