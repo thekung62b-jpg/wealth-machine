@@ -11,14 +11,15 @@ Action: active-window
 - reads the current foreground window title/process
 
 Action: notepad-safe-type-test
-- types the TEST 5 text only after foreground Notepad verification
+- sets and reads the TEST 5 text in a UIA-discovered Notepad edit control
 
-No network, clicks, or browser automation.
+No network, clicks, keystrokes, or browser automation.
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
 import ctypes
 import hashlib
 import json
@@ -26,12 +27,10 @@ import os
 import platform
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import pyautogui
 import psutil
 from PIL import ImageGrab
 
@@ -94,57 +93,132 @@ def foreground_window() -> dict[str, Any]:
     }
 
 
-def enum_windows_for_pid(process_id: int) -> list[int]:
-    if os.name != "nt":
-        raise RuntimeError("window enumeration is Windows-only")
+def run_powershell_json(script: str) -> dict[str, Any]:
+    encoded = base64.b64encode(script.encode("utf-16le")).decode("ascii")
+    proc = subprocess.run(
+        [
+            "powershell.exe",
+            "-NoProfile",
+            "-NonInteractive",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-EncodedCommand",
+            encoded,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=30,
+    )
+    lines = [line.strip() for line in proc.stdout.splitlines() if line.strip()]
+    json_line = next((line for line in reversed(lines) if line.startswith("{")), "")
+    if proc.returncode != 0:
+        raise RuntimeError(proc.stderr.strip() or proc.stdout.strip() or "PowerShell UIA command failed")
+    if not json_line:
+        raise RuntimeError("PowerShell UIA command returned no JSON")
 
+    payload = json.loads(json_line)
+    if not isinstance(payload, dict):
+        raise RuntimeError("PowerShell UIA command returned non-object JSON")
+    if proc.stderr.strip():
+        payload["stderr"] = proc.stderr.strip()
+    return payload
+
+
+def send_window_message(hwnd: int, message: int, wparam: int, lparam: Any) -> int:
     user32 = ctypes.windll.user32
-    windows: list[int] = []
-
-    @ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)
-    def enum_proc(hwnd: int, _lparam: int) -> bool:
-        pid = ctypes.c_ulong()
-        user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-        if int(pid.value) == process_id and user32.IsWindowVisible(hwnd):
-            windows.append(int(hwnd))
-        return True
-
-    user32.EnumWindows(enum_proc, 0)
-    return windows
+    user32.SendMessageW.argtypes = None
+    user32.SendMessageW.restype = ctypes.c_ssize_t
+    return int(user32.SendMessageW(ctypes.c_void_p(hwnd), message, wparam, lparam))
 
 
-def activate_window(hwnd: int) -> None:
-    user32 = ctypes.windll.user32
-    user32.ShowWindow(ctypes.c_void_p(hwnd), 5)
-    user32.SetForegroundWindow(ctypes.c_void_p(hwnd))
+def set_window_text(hwnd: int, text: str) -> int:
+    return send_window_message(hwnd, 0x000C, 0, ctypes.c_wchar_p(text))
 
 
-def click_inside_window(hwnd: int) -> dict[str, int]:
-    class RECT(ctypes.Structure):
-        _fields_ = [
-            ("left", ctypes.c_long),
-            ("top", ctypes.c_long),
-            ("right", ctypes.c_long),
-            ("bottom", ctypes.c_long),
-        ]
-
-    user32 = ctypes.windll.user32
-    rect = RECT()
-    if not user32.GetWindowRect(ctypes.c_void_p(hwnd), ctypes.byref(rect)):
-        raise RuntimeError("failed to read Notepad window bounds")
-
-    width = rect.right - rect.left
-    height = rect.bottom - rect.top
-    x = rect.left + min(120, max(10, width - 10))
-    y = rect.top + min(120, max(10, height - 10))
-    pyautogui.click(x, y)
-    return {"x": x, "y": y}
+def get_window_text(hwnd: int) -> str:
+    length = send_window_message(hwnd, 0x000E, 0, 0)
+    buffer = ctypes.create_unicode_buffer(max(length + 1, len(TEST5_TEXT) + 1))
+    send_window_message(hwnd, 0x000D, len(buffer), buffer)
+    return buffer.value
 
 
-def is_notepad_foreground(foreground: dict[str, Any]) -> bool:
-    process_name = str(foreground.get("process_name", "")).lower()
-    title = str(foreground.get("title", "")).lower()
-    return process_name == "notepad.exe" or "notepad" in title
+def notepad_uia_script() -> str:
+    return """
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+Add-Type -AssemblyName UIAutomationClient
+Add-Type -AssemblyName UIAutomationTypes
+
+$proc = Start-Process notepad.exe -PassThru
+$window = $null
+for ($i = 0; $i -lt 80; $i++) {
+  $proc.Refresh()
+  if ($proc.MainWindowHandle -ne 0) {
+    $candidate = [System.Windows.Automation.AutomationElement]::FromHandle([IntPtr]$proc.MainWindowHandle)
+    if ($null -ne $candidate) {
+      $window = $candidate
+      break
+    }
+  }
+  Start-Sleep -Milliseconds 100
+}
+
+if ($null -eq $window) {
+  [pscustomobject]@{
+    ok = $false
+    action = 'notepad-safe-type-test'
+    method = 'uia-target-discovery'
+    text_set = $false
+    readback_exact = $false
+    reason = 'notepad UIA window not found'
+    process_id = $proc.Id
+  } | ConvertTo-Json -Compress
+  exit 0
+}
+
+$target = $null
+$all = $window.FindAll(
+  [System.Windows.Automation.TreeScope]::Descendants,
+  [System.Windows.Automation.Condition]::TrueCondition
+)
+for ($i = 0; $i -lt $all.Count; $i++) {
+  $item = $all.Item($i)
+  $className = $item.Current.ClassName
+  $nativeHwnd = $item.Current.NativeWindowHandle
+  if ($nativeHwnd -ne 0 -and ($className -eq 'Edit' -or $className -like 'RichEdit*')) {
+    $target = $item
+    break
+  }
+}
+
+if ($null -eq $target) {
+  [pscustomobject]@{
+    ok = $false
+    action = 'notepad-safe-type-test'
+    method = 'uia-target-discovery'
+    text_set = $false
+    readback_exact = $false
+    reason = 'notepad native edit control not found through UIA'
+    process_id = $proc.Id
+    main_window_handle = $proc.MainWindowHandle
+  } | ConvertTo-Json -Compress
+  exit 0
+}
+
+[pscustomobject]@{
+  ok = $true
+  action = 'notepad-safe-type-test'
+  method = 'uia-target-discovery'
+  text_set = $false
+  readback_exact = $false
+  process_id = $proc.Id
+  main_window_handle = $proc.MainWindowHandle
+  edit_window_handle = $target.Current.NativeWindowHandle
+  control_name = $target.Current.Name
+  control_class = $target.Current.ClassName
+  control_type = $target.Current.ControlType.ProgrammaticName
+} | ConvertTo-Json -Compress
+"""
 
 
 def take_screenshot() -> dict[str, Any]:
@@ -184,44 +258,40 @@ def active_window() -> dict[str, Any]:
 
 
 def notepad_safe_type_test() -> dict[str, Any]:
-    proc = subprocess.Popen(["notepad.exe"])
-    hwnd = 0
-    focus_click: dict[str, int] = {}
-    for _ in range(40):
-        windows = enum_windows_for_pid(proc.pid)
-        if windows:
-            hwnd = windows[0]
-            activate_window(hwnd)
-            focus_click = click_inside_window(hwnd)
-            break
-        time.sleep(0.2)
-
-    time.sleep(0.3)
-    foreground = foreground_window()
-    if not is_notepad_foreground(foreground):
-        screenshot = take_screenshot()
-        return {
+    try:
+        payload = run_powershell_json(notepad_uia_script())
+        if payload.get("ok"):
+            edit_hwnd = int(payload["edit_window_handle"])
+            set_result = set_window_text(edit_hwnd, TEST5_TEXT)
+            readback = get_window_text(edit_hwnd)
+            exact = readback == TEST5_TEXT
+            payload.update(
+                {
+                    "ok": exact,
+                    "method": "uia-native-hwnd-wm-settext",
+                    "text_set": True,
+                    "set_message_result": set_result,
+                    "readback_exact": exact,
+                    "expected_text": TEST5_TEXT,
+                    "readback": readback,
+                }
+            )
+    except Exception as exc:
+        payload = {
             "ok": False,
             "action": "notepad-safe-type-test",
-            "typed": False,
-            "reason": "foreground window is not Notepad",
-            "foreground": foreground,
-            "focus_click": focus_click,
-            "screenshot": screenshot,
+            "method": "uia-native-hwnd-wm-settext",
+            "text_set": False,
+            "readback_exact": False,
+            "error": str(exc),
         }
 
-    pyautogui.write(TEST5_TEXT, interval=0.03)
-    time.sleep(0.5)
-    screenshot = take_screenshot()
-    return {
-        "ok": True,
-        "action": "notepad-safe-type-test",
-        "typed": True,
-        "typed_text": TEST5_TEXT,
-        "foreground_before_typing": foreground,
-        "focus_click": focus_click,
-        "screenshot": screenshot,
-    }
+    try:
+        screenshot = take_screenshot()
+    except Exception as exc:
+        screenshot = {"ok": False, "error": str(exc)}
+    payload["screenshot"] = screenshot
+    return payload
 
 
 def main() -> int:
