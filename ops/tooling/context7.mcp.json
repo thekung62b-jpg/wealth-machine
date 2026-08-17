@@ -1,0 +1,25 @@
+{
+  "_comment": "Context7 MCP - PINNED, read-only docs lookup. Audited 2026-08-17, see ops/TOOL_AUDIT_2026-08-17.md item 2.",
+  "_pin": "Version is pinned exactly. Do NOT change 4.0.2 to @latest - that silently re-opens the supply chain.",
+  "_no_api_key": "Intentionally NO apiKey / env block. Free tier works without one. Adding a key means an account, a credential on disk, and rate-limit tiers to manage - none of which this needs.",
+  "_egress_warning": "Query text IS sent to context7.com. Context7's own schema says: do not include API keys, passwords, credentials, personal data, or proprietary code. Library names and generic topics only.",
+  "_tools": "Server exposes exactly two read-only tools, verified by MCP handshake: resolve-library-id, query-docs. No write, shell, or filesystem tool exists in its surface.",
+  "_verification_status": "Tool surface VERIFIED. Live doc lookup NOT VERIFIED - the audit container blocks context7.com. Re-run the smoke test on the Windows host before trusting it.",
+
+  "mcpServers": {
+    "context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp@4.0.2"]
+    }
+  },
+
+  "_smoke_test_on_windows": [
+    "Window: Controller PowerShell",
+    "npx -y @upstash/context7-mcp@4.0.2",
+    "Expect on stderr: 'Context7 Documentation MCP Server v4.0.2 running on stdio'",
+    "Ctrl+C to exit. Then configure Codex and ask it to look up docs for a public library.",
+    "PASS = real documentation returned. FAIL = 'Error searching libraries: TypeError: fetch failed' (network/egress problem)."
+  ],
+
+  "_rollback": "Remove the context7 entry from the Codex MCP config. Optionally clear the npx cache. Nothing else persists."
+}

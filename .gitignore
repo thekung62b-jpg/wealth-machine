@@ -1,0 +1,40 @@
+# Added by the 2026-08-17 tool audit. See ops/TOOL_AUDIT_2026-08-17.md section 1.
+#
+# NOTE: .gitignore does NOT untrack files that are already committed.
+# .env, last_frame.png and test_capture.png are ALREADY TRACKED in this
+# PUBLIC repo. This file only prevents NEW secrets from being added.
+# Untracking the existing ones is an owner decision - see the audit, section 1.
+
+# Secrets and credentials
+.env
+.env.*
+!.env.example
+*.token
+.github_token
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# Desktop / screen captures - this repo is public; captures leak the desktop
+last_frame.png
+test_capture.png
+*_capture.png
+screenshot*.png
+
+# Task Observer restricted log (see ops/tooling/task-observer-restricted.md)
+ops/.observations/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Node
+node_modules/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
