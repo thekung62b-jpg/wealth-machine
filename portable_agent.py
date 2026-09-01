@@ -5,7 +5,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 # CONFIGURATION
-TOKEN = sys.argv[1] if len(sys.argv) > 1 else ""
+TOKEN = (sys.argv[1] if len(sys.argv) > 1 else "").strip()
+if not TOKEN:
+    # An empty token still starts the agent and then 401s on every poll, which
+    # is indistinguishable from an expired credential. Fail loudly instead.
+    sys.exit("NO BRIDGE TOKEN. Pass it as argv[1], e.g.\n"
+             "  $token = (Get-Content C:\\OpenClawBridge\\.github_token -Raw).Trim()\n"
+             "  python .\\portable_agent.py \"$token\"")
 REPO = "thekung62b-jpg/wealth-machine"
 CMD_FILE = "commands.json"
 BASE_DIR = Path(__file__).resolve().parent
