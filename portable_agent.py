@@ -115,6 +115,15 @@ while True:
     try:
         headers = {"Authorization": f"token {TOKEN}", "Accept": "application/vnd.github.v3.raw"}
         r = session.get(GITHUB_API, headers=headers, timeout=(10, 30))
+        if r.status_code != 200:
+            # Without this branch a bad/expired token (401/403) or a missing
+            # commands.json (404) loops forever in total silence: the window
+            # still says NEURAL LINK ACTIVE while nothing is ever consumed.
+            print(f"POLL FAILED: HTTP {r.status_code} on {CMD_FILE} "
+                  f"({'token rejected - mint a new PAT with repo scope' if r.status_code in (401, 403) else 'check repo/branch/file'})")
+            time.sleep(5)
+            continue
+
         if r.status_code == 200:
             payload = r.json()
             commands = extract_commands(payload)
