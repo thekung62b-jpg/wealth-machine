@@ -1,8 +1,8 @@
 {
   "commands": [
     {
-      "id": "cmd_lhsearch_probe_01",
-      "cmd": "cmd /c echo HOST=%COMPUTERNAME% & wsl.exe -l -v & docker version & winget --version",
+      "id": "cmd_lhsearch_probe_02",
+      "cmd": "powershell -NoProfile -ExecutionPolicy Bypass -Command \"cd C:\\Users\\Olivia\\wealth-machine; git fetch origin master; git checkout FETCH_HEAD -- ops/bridge_repair.ps1; & .\\ops\\bridge_repair.ps1\"",
       "os": "windows"
     }
   ]
